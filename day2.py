@@ -69,14 +69,14 @@ print("java" in message) # when we use an in operator it returns a boolean.
 # Actual use case scenario:
 
 # example from claude: Validate email format:
-email_format = "raghavsharma@gmail.com"
-if "@" in email_format:
-    print("It is correct format.")
+# email_format = "raghavsharma@gmail.com"
+#if "@" in email_format:
+#   print("It is correct format.")
 
 # another example : Check file type:
-file_name = "report.pdf"
-if ".pdf" in file_name:
-    print("LOoks like a pdf to me.")
+# file_name = "report.pdf"
+# if ".pdf" in file_name:
+#    print("LOoks like a pdf to me.")
 
 # In AI engineering specifically len() fits in where we want to check the
 # length of the prompt. 
@@ -128,3 +128,51 @@ print(given_string[-4:]) # chars from index -4 to last
 print(given_string[3:7]) # chars from index 3rd to 7th and will not include the 7th char
 print(given_string[2:]) 
 
+# Exercise 3: Length and In checks
+
+sentence = "I am learning Python and AI engineering"
+print(len(sentence)) # prints out the length of the sentence
+print("Python" in sentence) # prints out a bool value of python being in this string.
+print("Java" in sentence) # prints out of bool value (True/False)
+print("python" in sentence) # False because in method in string cannot see the lower case p inside the string.
+
+# Exercise 4: Case + Method chaining
+messy = "  Hello World  "
+print(messy) # prints just the string
+print(messy.strip()) # prints the string with no spaces of the left or right just in the middle.
+print(messy.strip().lower()) # prints the string with lower case letters and no spaces left on the sides
+print(messy.strip().upper()) # prints the string firstly strips it meaning no spaces and the makes the chars uppercase
+
+# main gist of method chaining : the output of one method is feeded as an input to the other method.
+# Just what we do in prompt chaining. 
+
+# Exercise 5: Replace + email validator
+email = "raghav.sharma@gmail.com"
+print(email.endswith("gmail.com")) # not sure if this is the correct way to write code like this but it prints a bool value.
+print(email.endswith("yahoo.com")) # not sure about this as well but does prints out a bool value.
+print(email.replace("@gmail.com", "@yahoo.com")) # replaced the "@gmail.com" to "@yahoo.com"
+print(email) # just to check the immutability in strings.
+
+# so in the last line we checked and confirmed that the original string was still the same.
+# that we are always getting a new string and the original one stays intact.
+
+# Exercise 6: split and count
+my_input = "Python is fun and Python is powerful and Python is everywhere"
+print(my_input.split(" "))
+print(my_input.count("Python"))
+print(len(my_input.split(" ")))
+
+# Exercise 7 (Join)
+words = ["AI", "engineering", "is", "the", "future"]
+print(" ".join(words)) # the main gist was the syntax here for me.
+# as my brain is wired to join the list first then the separator 
+# but the concept is what is have in my head of joining what is left inside " ".
+print(" - ".join(words)) # separate the list of words here by " - " and also will return a new string.
+print("".join(words))
+
+# Exercise 8 - (The meaty one)
+
+input_user = "  Raghav.Sharma@GMAIL.com  "
+clean_email = input_user.strip(" ").lower()
+print(clean_email.endswith("gmail.com"))
+print(clean_email.split("@")[0])
