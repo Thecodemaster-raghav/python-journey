@@ -59,9 +59,39 @@ print(my_numbers)
 # Same drill 
 fruit_ninja = ["apple", "banana", "cherry", "date"]
 
-fruit_ninja.append("melons")
-print(fruit_ninja)
+# fruit_ninja.append("melons")
+# print(fruit_ninja)
 
 removed = fruit_ninja.pop(0)
 print(removed)
 print(fruit_ninja)
+
+# stack and queues 
+
+# last in frst out is Stack (LIFO), and first in last out is queue (FIFO).
+# both stack and queue uses python list.
+# THE ONLY DIFF IS WHERE YOU REMOVE IT FROM.
+# using .append() for both the stack and queue 
+# as the keyword suggest it adds something and both the stack and queue use that.
+# for queue think of append as the 1st costomer at the CAFE
+# for stack think of it as the 1st PLATE from the pile of plates.
+
+# REMOVING is the part where they differ
+# STACK - last in first out :
+game = ["ps4", "ps5", "Xbox"]
+game.append("FIFA26")
+game.pop() 
+print(game)
+# here we saw it working that the last one entered was the first one out
+# basicaly .pop() is used for both the stack and queue data structures in python. 
+# and when we do not pass any value in .pop() as it works on indexing positions
+# so no indexing value in .pop meaning it is a stack which is again 
+# LAST IN FIRST OUT
+
+# QUEUE : First in first out: Like serving a customer in line.
+consumer = ["jarrod", "gilfoyle", "dinesh", "richard"]
+consumer.append("monica") # add and then the first one gets removed or gets served. FIFO
+consumer.pop(0) # FIRST IN FIRST OUT or WE CAN SAY something with a value or indexing position inside is a QUEUE
+# DATA STRUCTURE
+print(consumer)
+# basic gist of the queue data struc.
