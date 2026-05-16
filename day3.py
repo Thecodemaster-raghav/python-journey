@@ -79,8 +79,8 @@ print(fruit_ninja)
 # REMOVING is the part where they differ
 # STACK - last in first out :
 game = ["ps4", "ps5", "Xbox"]
-game.append("FIFA26")
-game.pop() 
+game.append("FIFA26") # LAST IN FIRST OUT
+game.pop() # 
 print(game)
 # here we saw it working that the last one entered was the first one out
 # basicaly .pop() is used for both the stack and queue data structures in python. 
@@ -95,3 +95,26 @@ consumer.pop(0) # FIRST IN FIRST OUT or WE CAN SAY something with a value or ind
 # DATA STRUCTURE
 print(consumer)
 # basic gist of the queue data struc.
+
+# Slicing in lists
+# Slicing is a read operation not write because it 
+# it does not mutate the data of the original list it reads through that 
+# returns a new list instead of modifying it.
+
+# Exercise 1: list basics
+fruits_given = ["apple", "banana", "cherry"]
+print(fruits_given[0]) # prints the first item from the list of fruits.
+print(fruits_given[-1]) # prints last item.
+print(len(fruits_given)) # prints out the length.
+print("banana" in fruits_given) # prints out a bool value wether or not banana in the list.
+
+# Exercises 2: Mutation practices
+
+nums_given = [10, 20, 30, 40, 50]
+nums_given.append(60) # adds a val 60 in this case.
+nums_given.remove(30) # removes a val. 30 in this case.
+del nums_given[0] # used this but can also use pop(0)
+print(nums_given)
+# last is where i got stuck i might have forgotten the last part
+nums_given[0] = 99
+print(nums_given)
