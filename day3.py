@@ -117,4 +117,55 @@ del nums_given[0] # used this but can also use pop(0)
 print(nums_given)
 # last is where i got stuck i might have forgotten the last part
 nums_given[0] = 99
-print(nums_given)
+print(nums_given) # the simplest way is just SETTING/ASSIGNING the value again at the index you want to change.                             
+
+# Exercise 3: Slicing practice..
+
+animals = ["cat", "dog", "bird", "fish", "rabbit", "hamster"]
+print(animals[:3]) # prints first 3 animals
+print(animals[-2:]) # prints last 2 animals
+print(animals[2:4]) # prints animals from index 2 to 4
+print(animals[:-2]) # prints all animals except last 2
+
+# Excercise 4: Stack behavior
+plates = []
+plates.append("plate1")
+plates.append("plate2")
+plates.append("plate3")
+
+print(plates) # prints the stack
+
+top_plate = plates.pop() # as it is stack last in first out
+print(top_plate) # so plate3 was the latest
+
+print(plates) # here we saw mutation amongst the list. Returned which was left.
+
+# Exercise 5: queue behavior
+
+customers = []
+customers.append("Alice")
+customers.append("Bob")
+customers.append("Charlie")
+print(customers)
+next_customer = customers.pop(0) # First in first out
+print(next_customer) # prints the customer which was served
+
+print(customers) # prints the remaining customers in queue
+
+
+# Execcise 6 : Real world data  question
+messy_emails = [" Raghav@GMAIL.com  ", "alice@yahoo.com", "BOB@hotmail.com ", "  charlie2gmail.com"]
+
+print(messy_emails[0].strip().lower()) # corrected way i should have given it some more time and thought on it.
+
+raw_topics = [
+    " cardiology ", 
+    "NEPHRLOGY",
+    "Pulmonogy",
+    " GASTROantrology"
+    "neurology"
+]
+
+print(raw_topics[0].strip().lower())
+print(raw_topics[1].strip().lower())
+print(raw_topics[2].strip().lower())
