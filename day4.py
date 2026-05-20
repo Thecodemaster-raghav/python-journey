@@ -142,3 +142,64 @@ for maximum in given_values:
         # and after that 33 = max, which is not greater than 78. and that is the gist of this algorithm
         max_val = maximum 
 print(max_val)
+
+# Exercises day 4: 
+# Exercise 1: basic loops
+colors = ["red", "blue", "green", "yellow"] # basic loops
+for c in colors:
+    print(c) 
+
+# Exercise 2: Loop with range
+for i in range(1, 11): # here we wanted to print nums 1 through 10 
+    print(i)
+
+
+# Exercise 3: Counting 
+
+temps = [12, 45, 33, 8, 27, 50, 19, 41]
+count_temp = 0
+for t in temps:
+    if t > 30: # whether the temp is above 30 or not
+        count_temp = count_temp + 1 # here we are counting the temps above 30
+        # saving the count in a separate varable 
+print(count_temp)
+
+# Excercise 4: Filtering
+temps_f = [12, 45, 33, 8, 27, 50, 19, 41] # here we are collecting the items from this list
+temps_above = [] # storing the items from the above list which matches our condition
+for f in temps_f:
+    if f > 30: # the condition here is to collect temps above the value of 30 
+        temps_above.append(f) # and then we stored them using .append
+print(temps_above)
+
+# Exercise 5 : Finding minimun
+prices = [229, 149, 559, 89, 449, 199]
+lowest_price = prices[0] # thumb rule is we always start the accumulator with the first value in a list
+# in finding. we never hard code as in real world production code there are so many values 
+for p in prices:
+    if lowest_price > p: # to find the lowest price and save it using a accumlator
+        lowest_price = p
+print(lowest_price)
+
+# Exercise: Loop if and else and elif
+
+score = [95, 82, 67, 78, 55, 88, 90, 80]
+for s in score:
+    if s >= 90:
+        print("A")
+    elif s>= 80:
+        print("B")
+    elif s>=70:
+        print("C")
+    else:
+        print("F")
+
+
+# Exercise 7 : While loop
+
+fuel = 100
+trips = 18
+
+while fuel >= 18:
+    fuel = fuel - trips
+    print(fuel)
