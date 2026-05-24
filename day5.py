@@ -48,3 +48,52 @@ def calculate(a, b):
 calculate(10, 6)
 print(calculate)
 # print(total) # here we will get an error as total does not exist outside the function
+
+# Exercise 1: Define and call
+def say_hello(): # Here we are defining the function: no inputs
+    print(f"Hello, world!") # here just printing Hello, world no storing of any values
+
+say_hello() # Here we are calling that function 3 times
+say_hello()
+say_hello()
+
+# Exercise 2: One parameter
+# Firstly what is a parameter : it is input value we give to a function.
+def greet_user(name): #defining what function and input we are gonna give to the function
+    print(f"Welcome, {name}!") # asking it to show to the terminal
+greet_user("Raghav") # calling the function with 2 different names here
+greet_user("Shriyam")
+
+# Exercise 3: return, not print
+def square(n):
+    return n * n # using return to hand the value back to the fucntion
+result = square(6) # using the function to call the return value and storing it in a variable called result
+print(result) #printing the result variable
+
+# Exercise 4: Multiple parameters
+def rectangle_area(width, height):
+    return width * height # to hand back the value to the function itself
+x = rectangle_area(4, 7) # calling the function using input stored in the define block of the function
+print(x)
+# so return hands back the vlaue out of the fucntion to whoever calls it
+
+# Excercise 5 : Return feeding into code
+def is_passing(score):
+    if score >= 50: # runing an if block to check the condition
+        return True
+    else:
+        return False 
+resulted_score = is_passing(50) # calling the variable and storing it in resulted_score variable
+if resulted_score:
+    print("Passed")
+else:
+    print("Failed")
+
+
+# Exercise 6:
+def add_ten(num):
+    return num + 10
+print(add_ten(add_ten(5)))
+# The output would be 25. Because firstly the nested function works and prints the value
+# then that nested functions output becomes the input value for the outside function
+# that is why 25 gets printed instead of 15
