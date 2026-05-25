@@ -160,7 +160,7 @@ print(messy_emails[0].strip().lower()) # corrected way i should have given it so
 
 raw_topics = [
     " cardiology ", 
-    "NEPHRLOGY",
+    "NEPHROLOGY",
     "Pulmonogy",
     " GASTROantrology"
     "neurology"

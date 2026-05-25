@@ -200,6 +200,6 @@ for s in score:
 fuel = 100
 trips = 18
 
-while fuel >= 18:
-    fuel = fuel - trips
+while fuel >= 18: # here while loop runs y the time feul is eqaul to or greater than 18.
+    fuel = fuel - trips # here it prints out abut how mny times will the trips be made.
     print(fuel)

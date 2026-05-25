@@ -150,3 +150,9 @@ user_password = "secret123"
 user_input = "Secret123"
 
 print(user_password.lower() == user_input.lower())
+
+# No need to use If else the question was to run the code in 1 line.
+# If/Else i used from our boolean case where we were checking 
+# If the boolean would return false or true use "" empty string.
+# So i from there i thought we could use that but i have learned 
+# That we do not need to complicate tasks engineering is about not complicating but unwrapping.
