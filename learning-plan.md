@@ -51,18 +51,6 @@ Resume tailored to specific roles, applications begin
 Serious job-listing matching, interviews, relocation
 (Architecture/system-design prep threads through Months 2-8)
 
-## Progress Log
-
-### Completed
-- Day 1: variables, types, operators, type conversion, f-strings, truthy/falsy
-- Day 2: strings and string methods
-- Day 3: lists — mutability, indexing, slicing, methods (build: Quiz Tracker)
-- Day 4: conditionals + loops — if/elif/else, for, while, counting/filtering/finding (build: Quiz Tracker with loops)
-- Day 5: functions — def, calling, parameters/arguments, return, local variables; 6 exercises done
-
-### Pending
-- Day 5 build challenge: refactor Quiz Tracker into functions (first engineering review)
-
 ## Repo
 github.com/Thecodemaster-raghav/python-journey
 Daily Git workflow: git add . -> git commit -m "message" -> git push
