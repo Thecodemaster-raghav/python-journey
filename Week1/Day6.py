@@ -38,3 +38,31 @@ data["b"] = 9 # this gets added to the dictionary and a new key value pair is cr
 club_eng = {"manunited": True, "real madrid": False}
 print("score" in club_eng)
 print("real madrid" in club_eng)
+# one important take is that IN cheks keys not values
+
+# Part 5: Looping over a dictionary:
+# we can loop over a dictionary as we did the same in the list. 
+# But here we will be returned a key so the loop would be over the key.
+given_scores = {"Q1": True, "Q2": False, "Q3": True}
+for key in given_scores:
+    print(key) # like in the lists it would print the str or an int. 
+# but here in the terminal we only get the keys not the value
+# but to get the values as well
+for g in given_scores:
+    print(g, given_scores[g]) # here this would print the key as well as the values.
+
+# but we can use .items() to reach for both- It hands us both key and value.
+for k, v in given_scores.items(): # the syntax if we using .items()
+    print(k, v)
+
+# Part 5: Concept check:
+results = {"Q1": True, "Q2": False}
+for k in results:
+    print(k)
+# 1. This above print statement will only print the keys. Not values
+# Rewriting the loop:
+for k, v in results.items():
+    print(k, v) # here i have used .items to catch both keys and value.
+
+# 3. as suggested in the above line 65 .items will also fetch for values not just keys
+# as we did in plain loop.
