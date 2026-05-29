@@ -1,0 +1,3 @@
+grocery 200
+transport 150 
+rent 400
