@@ -1,0 +1,6 @@
+Pearls report
+Total pearls: 10
+Easy: 3
+Good: 3
+Hard: 3
+Again: 1
