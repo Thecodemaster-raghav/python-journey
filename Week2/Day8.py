@@ -150,4 +150,90 @@ remaining = easy_bank - answered # here we have used a difference. As we wanted 
 print(remaining)
 
 progress_count = len(answered)
-print(progress_count)
+print(progress_count) # here i have used answered as those the questions the students have completed.
+
+# Part 4: Tuples: Immutable like strings. But store collection of items 
+# just as a list but we cannot add remove or add to it or modify any item in it. they are 
+# frozen when created.
+# we write tuple with parantheses:
+# point = (1, 3)
+person = ("raghav", 26, "saskatoon")
+# we can access any items inside of a tuple using index[0, 1, 2]
+# just as we did with a list
+# print(point[0])
+# print(person[0])
+
+# we also loop over a tuple exactly like a list
+for i in person:
+    print(i)
+
+# we can check memberships exactly like a list
+# print("raghav" in person) # True
+
+# so far it sounds like a list. The difference is what we cannot do.
+# person[0] = 10 # will crash
+# person.append("ai enfgineer") # will carsh
+
+# tuples are read only after creation.
+
+# but why do tuples exists when list is already there
+
+# the biggest difference between a tuple and a list is that. once created 
+# they are frozen we cannot change, modify, update or add to a tuple. they are immutable.
+# while a list is not immutable.
+
+# i will reach for a tuple when i want a set a values and i do not want them to change.
+# like langitude and lantitude or a date. I do not want to change the format of how they are 
+# stored.
+
+# Part - 5: Tuple Unpacking.
+# we do tuple unpacking so that a fucntion can return multiple values cleanly.
+
+# tuple exercise:
+user = ("raghav", 26, "saskatoon")
+point = (3, 5)
+
+# Basic indexing:
+print(user[0]) # prints the name
+print(user[2]) # prints the city
+
+# Tuple unpacking
+name, age, city = user # unpacks into all three
+
+# Immutability proof:
+# point[0] = 99 # will give a error stating 'tuple' object does not support item assignment.
+
+# function returning a tuple:
+def get_coords():
+    numbers = 45.4, -75.6
+    return numbers
+lat, lng = get_coords()
+print(lat, lng)
+
+# underscore for dont care
+def get_val(user):
+    return user
+name, _, city = get_val(user)
+print(name, city)
+
+# swap with tuple:
+a= "first"
+b = "second"
+print(a, b)
+# after swap
+a, b = b, a
+print(a, b) 
+
+# looping over tuples in a list
+students = [("alice", 92), ("bob", 78), ("raghav", 85)]
+for name, score in students:
+    print(f"name: {name} Score: {score}")
+
+# real scenario: 
+scores = [80, 92, 75, 88, 90]
+def analyze_scores(scores):
+    total = sum(scores)
+    avg = total / len(scores)
+    return total, avg
+total, avg = analyze_scores(scores)
+print(total, avg)
