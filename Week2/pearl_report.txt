@@ -1,0 +1,9 @@
+Pearl Review Report
+Total reviews: 10
+Unique pearl reviews: 6
+Pearls needing review (wrong at least once): {'P4', 'P2', 'P6', 'P5'}
+Difficulty breakdown: 
+  Easy: 5
+  Hard: 3
+  Good: 1
+  Again: 1
