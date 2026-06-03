@@ -1,0 +1,10 @@
+P1 | Easy | True
+P2 | Hard | False
+P3 | Easy | True
+P1 | Easy | True
+P4 | Good | False
+P2 | Hard | True
+P5 | Again | False
+P3 | Easy | True
+P6 | Hard | False
+P1 | Easy | True
