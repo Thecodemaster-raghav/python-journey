@@ -1,5 +1,4 @@
 # Day 8 build challenge. Pearl-Review-Analyzer
-
 def read_reviews(filename):
     reviews = []
     with open(filename) as f:
@@ -43,12 +42,3 @@ def main():
     write_report(analysis, "pearl_report.txt")
 
 main()
-
-
-        
-    
-
-
-
-
-    
