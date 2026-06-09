@@ -86,3 +86,30 @@ for p in raw_prices:
         print(f"Failed count: {p}")
 print(count_success)
 print(count_failed)
+
+# else for succcess path
+task = ["10", "abc", "25", "xyz", "5"]
+clean_data = []
+for t in task:
+    try:
+        n = int(t)
+    except ValueError: # passing a value error everytime we encounter a invalid input from the list task
+        print(f"Skipped message: {t}")
+    else: # the main reason we used else block as we want to catch errors which are errors. 
+        # if we put evrything in the try it would catch errors which are not genuinely errors
+        clean_data.append(n)
+print(clean_data)
+
+# finally for gauranteed cleanup
+user_input = [100, 0, 50, 0 ,25]
+data = []
+for u in user_input:
+    try:
+        compute = 100 / u  
+    except ZeroDivisionError:
+        print(f"wrong outputs: {u}")
+    else:
+        data.append(compute)
+    finally:
+        print(f"processed: {u}")
+print(data)
