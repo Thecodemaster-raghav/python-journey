@@ -3,10 +3,18 @@ def doubled(number):
     num = number * number
     return num
 
+def second(name):
+    greet = "Hello " + name
+    return greet
+
 def main():
     number = int(input())
+    name = str(input())
+    person = second(name)
     result = doubled(number)
     print(result)
+    print(person)
+
 if __name__ == "__main__":
     main() # so doing it this way the import will run the function silently and kill the ask for second input 
     # and it will kill that problem at its root.
