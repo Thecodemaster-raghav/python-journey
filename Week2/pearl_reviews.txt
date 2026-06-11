@@ -8,5 +8,3 @@ P5 | Again | False
 P3 | Easy | True
 P6 | Hard | False
 P1 | Easy | True
-P1 |
-p2 | eASY 
