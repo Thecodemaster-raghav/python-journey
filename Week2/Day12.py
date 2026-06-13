@@ -32,10 +32,12 @@ print(p2.wrong_ans)
 print(p1.wrong_ans) # here we would get 1 as the output as here the self works as wrong_ans
 print(p1.difficulty)# here the output would be "Hard" as self was called and 
 
+# made a class for my girlfriend
 class Shriyam:
     def __init__(self, beauty, profession):
         self.beautiful = beauty
         self.profession = profession
+
     def her_age(self):
         self.age = int(input())
         print("Shes incredible")
@@ -44,3 +46,30 @@ her_beauty = Shriyam("Out of this world", "Surgeon")
 her_beauty.her_age()
 print(her_beauty.beautiful)
 print(her_beauty.profession)
+
+class Fan:
+    def __init__(self, speed, is_on):
+        self.speed = speed
+        self.is_on = is_on
+
+    def describe(self):
+        print(f"The speed  of the fan: {self.speed} and {self.is_on}")
+
+    def turn_off(self):
+        self.is_on = False
+
+    def speed_up(self):
+        self.speed += 1
+
+bedroom_fan = Fan(3, True)
+living_room_fan = Fan(5, False)
+office_fan = Fan(7, True)
+living_room_fan.speed_up()
+living_room_fan.speed_up()
+bedroom_fan.turn_off()
+office_fan.describe()
+bedroom_fan.describe()
+living_room_fan.describe()
+print(bedroom_fan.speed)
+print(living_room_fan.is_on)
+print(living_room_fan.speed)
