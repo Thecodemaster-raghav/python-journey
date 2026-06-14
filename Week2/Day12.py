@@ -73,3 +73,65 @@ living_room_fan.describe()
 print(bedroom_fan.speed)
 print(living_room_fan.is_on)
 print(living_room_fan.speed)
+
+# so self equals to the variable that we use to call the object of the class and multi instance is that we can have as 
+# many objects in a class and they all can have separate data and functionalities without mixing them up with
+# one and other.
+# self is how we refer to the method refers to whichever object is called.
+
+# Concept : object holding and interacing with other objects.
+# it means we are adding another layer where objects can hold other objects and methods can call other methods
+class Room:
+    def __init__(self, name):
+        self.name = name
+        self.fans = [] # a list that will hold a fan object
+    
+    def add_fan(self, fan):
+        self.fans.append(fan) # here putting fan object into this rooms list.
+
+# Exercise 3 added another method inside the class Room which will reach out to the Fan classmethod
+# and will loop over the objects of describe() method.
+    def describe_all(self):
+        for f in self.fans:
+            f.describe()
+
+my_room = Room("Bedroom")
+
+my_room.add_fan(bedroom_fan) # notice here we are making a new object and calling the other object bedroom_fan
+my_room.add_fan(office_fan) # same done here calling the other object office_fan and my_room
+# so here it holds the whole objects inside not just the attriutes of the objects but the whole thing.
+print(my_room.fans[0].speed)
+print(my_room.fans[0].is_on)
+print(len(my_room.fans))
+my_room.describe_all()
+
+# Testing indepenence
+study_room = Room("Study")
+study_room.add_fan(office_fan)
+print(len(study_room.fans)) # here the len will be 1 as only office_fan is added to the object study_room
+print(len(my_room.fans)) # remains 2 as there is no changes made in the my_room bject that proves independence
+
+
+class Players:
+    def __init__(self, names, num_players): # class playlist with names and build as attributes and an empty list
+        self.names = names
+        self.num_players = int(num_players)
+        self.teams = []
+
+    def item(self, players): # a method that we use to add the object
+        self.teams.append(players)
+
+    def team_players(self):
+        total = 0
+        for t in self.teams:
+            count = t.names
+            count_2 = t.num_players # for the players and jersey name to be inside
+            print(count, count_2)
+            total = total + count_2 # adding to the running total
+        return total
+    
+given_items = Players("ronaldo", 7)
+team_sheet = Players("neymar", 10)
+given_items.item(given_items)
+given_items.item(team_sheet)
+print(given_items.team_players())
