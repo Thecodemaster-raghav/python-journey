@@ -135,3 +135,39 @@ team_sheet = Players("neymar", 10)
 given_items.item(given_items)
 given_items.item(team_sheet)
 print(given_items.team_players())
+
+# inheritance: in inheritance we write one parent class with several child class that
+# shares stuff with the child class.
+# eg:
+class Appliance:
+    def __init__(self, brand, price):
+        self.brand = brand
+        self.price = price
+
+    def power_on(self):
+        print(f"{self.brand} powering on")
+
+# then the child class that inherits from it and gets all of that for free adds its own.
+class Fridge(Appliance): # here fridge is the inherited class and Appliance is the parent class
+    
+    def __init__(self, brand, price, has_water):
+        super().__init__(brand, price)
+        self.has_water = bool(has_water)
+    
+    def making_ice(self):
+        print(f"{self.brand} makes ice")
+
+
+class Washer(Appliance):
+    def __init__(self, brand, price, capacity):
+        super().__init__(brand, price)
+        self.capacity = float(capacity)
+
+    def what_capacity(self):
+        print(f"{self.brand} has {self.capacity}")
+
+
+my_fridge = Fridge("LG", 1800, True)
+my_washer = Washer("Samsung", 1900, 5.0)
+my_fridge.making_ice()
+my_washer.what_capacity()
