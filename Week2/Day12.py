@@ -158,7 +158,7 @@ class Fridge(Appliance): # here fridge is the inherited class and Appliance is t
         super().power_on()
         print(f"{self.brand} does cooling and humming") # here we are overriding the method power_on from Appliance clss
         print(f"{self.brand} now cooling")
-        
+
     def making_ice(self):
         print(f"{self.brand} makes ice")
 
@@ -167,6 +167,10 @@ class Washer(Appliance):
     def __init__(self, brand, price, capacity):
         super().__init__(brand, price)
         self.capacity = float(capacity)
+
+    def power_on(self):
+        super().power_on()
+        print(f"{self.brand} starting wash cycle")
 
     def what_capacity(self):
         print(f"{self.brand} has {self.capacity}")
