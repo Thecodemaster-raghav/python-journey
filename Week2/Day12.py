@@ -153,7 +153,12 @@ class Fridge(Appliance): # here fridge is the inherited class and Appliance is t
     def __init__(self, brand, price, has_water):
         super().__init__(brand, price)
         self.has_water = bool(has_water)
-    
+
+    def power_on(self):
+        super().power_on()
+        print(f"{self.brand} does cooling and humming") # here we are overriding the method power_on from Appliance clss
+        print(f"{self.brand} now cooling")
+        
     def making_ice(self):
         print(f"{self.brand} makes ice")
 
@@ -168,6 +173,13 @@ class Washer(Appliance):
 
 
 my_fridge = Fridge("LG", 1800, True)
-my_washer = Washer("Samsung", 1900, 5.0)
+my_washer = Washer("Bosch", 1900, 5.0)
 my_fridge.making_ice()
 my_washer.what_capacity()
+my_washer.power_on() # yes this work as washer is child class of Appliance and it takes up characteristics of Appliance and 
+# will print brand and that is powering on.
+
+# Method overriding: this means we change the method of the parents class 
+# inside of the child clas and that only runs as python always looks at the child classes methods first and if the check says
+# power_on is inside the child class that method gets executed instead of the one i class.
+my_fridge.power_on()
