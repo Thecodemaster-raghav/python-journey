@@ -64,6 +64,39 @@ print(type(loads_back)) # checking the data type of the file
 try:
     with open("broken.json", "r") as file:
         loaded_file = json.load(file)
-except json.JSONDecodeError as e:
-    print(f"Data is not appropriate: {e}")
-    
+        print(loaded_file)
+except json.JSONDecodeError:
+    print(f"Data is not appropriate, file in not valid JSON format")
+
+# deserialization from json -> python that is known as deserialization
+# Edge cases - Set, tuple and dicts 
+notes = {"raghav", "shubham", "karan", "happy"}
+# note = json.dumps(notes)
+# print(note) # we saw here it error outs as set is not json serializable 
+# json does not have a close data type conversion for a set so it hands back a error.
+# while in a tuple a close one to the list in python when we dump the data into json it turns
+# it to json array and when loaded back to python it loads it as a list.
+small_dict = {1: "a", 2: "b"}
+cool = json.dumps(small_dict)
+print(cool) # a thing to notice here is that the keys of a dicts are changed to a string the values stays untouched.
+# like in small_dict 1 turns to "1" on the round trip becuase JSON object keys must be string.
+
+new_dict = {"Topic": "Anatomy", "year": 2026, "was_correct": True, "note": None}
+location = (4, 112)
+attempts = {1: "misses", 2: "right ans"}
+tags = ["anatomy", "radiology", "nephrologist"] # converted set into a list
+
+# when we dump the new_dict just the "was_correct" and "note" is changed to true and null all the other stays the same 
+# which is a string
+# location becomes a array
+# in attemots the keys are changed to strings because JSON object keys must be a string.
+# tags will give an error
+
+print(json.dumps(new_dict))
+print(json.dumps(location))
+print(json.dumps(attempts))
+print(json.dumps(tags))
+
+loaded_dict = json.dumps(new_dict)
+result = json.loads(loaded_dict)
+print(result)
