@@ -100,3 +100,27 @@ print(json.dumps(tags))
 loaded_dict = json.dumps(new_dict)
 result = json.loads(loaded_dict)
 print(result)
+
+# key takeaway is that the json.dumps needs to work with json.loads it works as a pair not separate.
+
+# Part 1 and 2 exercises: the nested session record
+
+session = {
+    "SUBJECT": "RAG", "Scores": (205, 405, 605), "coords": (2,5), 
+    "minutes":{1: "warmup", 30: "MCQS"},
+    "Topics": ["raghav", "shubham", "ronaldo", "messi"],
+    "done": True, "none": None
+           }
+my_session = json.dumps(session)
+print(my_session) # here we are getting an error because we have a set in the data ans json cannot serialize it.
+# now that we have changed the set to a list the data will be serialized by json. A string for keys of dict a
+# list or array of scors and coords
+
+# now the round trip: json.loads
+load_session = json.loads(my_session)
+print(load_session)
+
+# Exercise 2: writing a json string by hand
+shape = '{"id": "P1", "marks": 25, "correct": true, "explaination": null, "options": ["raghav", "keshav", "sahib"],"meta": {"subject": "anatomy"}}'
+shape_loaded = json.loads(shape)
+print(shape_loaded)
