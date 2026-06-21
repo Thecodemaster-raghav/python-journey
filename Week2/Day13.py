@@ -124,3 +124,46 @@ print(load_session)
 shape = '{"id": "P1", "marks": 25, "correct": true, "explaination": null, "options": ["raghav", "keshav", "sahib"],"meta": {"subject": "anatomy"}}'
 shape_loaded = json.loads(shape)
 print(shape_loaded)
+
+# Part 3: Output control
+# this means we change the look of the serialised output of json.dumps
+# there are 3 rungs: Indent, sort_keys, ensure_ascii
+
+# checking indent:
+sessions = {
+    "SUBJECT": "RAG", "Scores": (205, 405, 605), "coords": (2,5), 
+    "minutes":{1: "warmup", 30: "MCQS"},
+    "Topics": ["raghav", "shubham", "ronaldo", "messi"],
+    "done": True, "none": None
+           }
+
+my_sessions = json.dumps(sessions, indent=2) # it is just the cosmetics. pretty printing it for the users 
+# print(my_sessions) # indenting means 
+
+# now sort_keys this means that dumps write evrything in the alphabatical order every time when put in inside json.dumps
+
+# why do we do that? to make equal data look equa to any comparable bytes.
+
+my_sorted = json.dumps(sessions, indent=2, sort_keys = True)
+# print(my_sorted) # so that same keys comes out as alphabetical order
+
+names = {"name": "राघव"}
+my_name = json.dumps(names)
+my_names = json.dumps(names, ensure_ascii = False) # to ensure that we do not have values coming out as ascii codes
+# when something is not typed in english. The reason to set this false is readability.
+print(my_name)
+print(my_names)
+
+data = {"Zebra": 1, "apple": 2, "Mango": 3, "banana": 4}
+my_data = json.dumps(data, sort_keys= True)
+print(my_data) # prints everythng alphabetical order but the alphabets in uppercase holds higher value in asci characters.
+
+# exercise : indent and nesting depth
+data2 = {"user": "raghav", "scores": [91, 85], "meta": {"city": "Saskatoon"}}
+my_data2 = json.dumps(data2, indent = 4)
+print(my_data2) # here we will have 8 spaces sitiing infront of city: Saskatoon
+
+# exercise 3: combine all three
+new_data = {"City": "Montreal", "name": "राघव"}
+my_new_data = json.dumps(new_data, indent=2, ensure_ascii=False) # because ensure_ascii is always true
+print(my_new_data)
