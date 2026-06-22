@@ -165,5 +165,79 @@ print(my_data2) # here we will have 8 spaces sitiing infront of city: Saskatoon
 
 # exercise 3: combine all three
 new_data = {"City": "Montreal", "name": "राघव"}
-my_new_data = json.dumps(new_data, indent=2, ensure_ascii=False) # because ensure_ascii is always true
+my_new_data = json.dumps(new_data, indent=2, sort_keys=True, ensure_ascii=False) # because ensure_ascii is always true
 print(my_new_data)
+
+# Part 4:  custom serialization with default.
+# here if we see the data that has a set value we assign a default function and call it.
+
+# the default function
+def convert(obj):
+    if isinstance(obj, set):
+        return list(obj) # turn the set into a list which JSON can handle.
+
+given_data = {"tags": {"python", "json"}}
+polished_data = json.dumps(given_data, default=convert)
+print(polished_data)
+
+from datetime import datetime
+data_datetime = {"created": datetime.now()}
+
+def convert_data(obj):
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+
+given = json.dumps(data_datetime, default=convert_data, ensure_ascii= False)
+print(given)
+
+# exercises:
+from decimal import Decimal
+
+given_d = {"price": Decimal("19.99")}
+
+def convert_d(total):
+    if isinstance(total, Decimal):
+        return float(total)
+
+total_price = json.dumps(given_d, default=convert_d)
+print(total_price) # so here the object is nt serialized we need to make it readable for json using a function
+
+# exercise: one default multiple types:
+my_date = {"tags": {"a", "b"}, "created": datetime.now()}
+
+def conversion(my_letters):
+    if isinstance(my_letters, set):
+        return list(my_letters)
+    elif isinstance(my_letters, datetime):
+        return my_letters.isoformat()
+
+clean_data = json.dumps(my_date, default=conversion, ensure_ascii=False)
+print(clean_data)
+
+# exercise 3: serializing the own object
+class Pearl:
+    def __init__(self, topic, fact):
+        self.topic = topic
+        self.fact = fact
+
+my_pearl = Pearl("radiology", "Hard")
+my_dict = {"P1": my_pearl, "fact": True}
+
+def convert_pearl(obj):
+    if isinstance(obj, Pearl):
+        return obj.__dict__
+    
+expected_result = json.dumps(my_dict, default=convert_pearl)
+print(expected_result)
+
+# Raising Errors in JSON when converting
+from datetime import datetime
+data_datetime = {"when": datetime.now(), "tags": {"q", "a"}}
+
+def convert_data(obj):
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    raise TypeError(type(obj))
+
+given_datetime = json.dumps(data_datetime, default=convert_data, ensure_ascii=False)
+print(given_datetime)
