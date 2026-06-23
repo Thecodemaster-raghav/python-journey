@@ -1,0 +1,17 @@
+[
+  {
+    "topic": "Radiology",
+    "fact": "Xrays and MRI",
+    "difficulty": "Hard"
+  },
+  {
+    "topic": "Anatomy",
+    "fact": "Human body",
+    "difficulty": "Easy"
+  },
+  {
+    "topic": "Cardiology",
+    "fact": "Heart",
+    "difficulty": "Medium"
+  }
+]
