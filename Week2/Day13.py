@@ -237,7 +237,90 @@ data_datetime = {"when": datetime.now(), "tags": {"q", "a"}}
 def convert_data(obj):
     if isinstance(obj, datetime):
         return obj.isoformat()
-    raise TypeError(type(obj))
+    # raise TypeError(type(obj))
 
 given_datetime = json.dumps(data_datetime, default=convert_data, ensure_ascii=False)
 print(given_datetime)
+
+# cumulative exercises
+
+record = {
+    "name": "raghav",
+    "scores": (90, 85, 88),
+    "levels": {1: "easy", 2: "hard"}
+}
+
+with open("record.json", "w") as file:
+    filename = json.dump(record, file, indent=2) # writing a json file
+
+with open("record.json", "r") as f:
+    loaded = json.load(f) # in the terminal we can see that the values inside of the dict has been serialised to json strings 
+    # and also that scores has been changed to a array or list or numbers
+print(loaded)
+
+# PARSE AN API-SHAPED RESPONSE:
+api_response = '''
+{ 
+   "status": "ok",
+   "results": [
+      {"id": "P1", "topic": "anatomy", "score": 8.5},
+      {"id": "P2", "topic": "radiology", "score": 7.0}
+    ],
+    "count": 2
+}
+'''
+
+get_response = json.loads(api_response)
+get_topic = get_response["results"][1] # same here pulling the second result using key and value
+print(get_topic)
+get_count = get_response["count"] # taking out the value using dicts
+print(get_count)
+
+# Combine output control + file 
+pearls = [
+    {"topic": "anantomy", "note": "Montreal group"},
+    {"topic": "cardiology", "note": "राघव notes"}
+]
+
+with open("pearls_needed.json", "w", encoding="utf-8") as f: # always using encoding in open as windows code page 
+    # a western european character set with no slot for devnagri characters.
+    files = json.dump(pearls, f, indent=2, sort_keys=True, ensure_ascii= False)
+
+with open("pearls_needed.json", "r", encoding="utf-8") as p:
+    loads_back_into = json.load(p)
+
+print(loads_back_into)
+
+# error handling in json again
+try:
+    with open("broken.json", "r") as b:
+        json.load(b)
+except json.JSONDecodeError:
+    print(f"Invalid json data: {b}")
+
+
+# modify then re save 
+with open("record.json", "w") as file:
+    filename = json.dump(record, file, indent=2)
+
+with open("record.json", "r") as my_file:
+    laods = json.load(my_file)
+    laods["update"] = True
+
+with open("record.json", "w") as f:
+    json.dump(laods, f, indent=2)
+
+
+# nested investigation, one level deeper
+def my_converse(obj):
+    if isinstance(obj, set):
+        return list(obj)
+
+nested_data = {
+    "user": {"name": "raghav", "skills": ("python", "json", "sql")}
+}
+
+data_given = json.dumps(nested_data, default=my_converse, indent=2)
+get_skills = json.loads(data_given)
+my_skills = get_skills["user"]["skills"][1]
+print(my_skills)

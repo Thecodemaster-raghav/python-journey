@@ -1,0 +1,13 @@
+{
+  "name": "raghav",
+  "scores": [
+    90,
+    85,
+    88
+  ],
+  "levels": {
+    "1": "easy",
+    "2": "hard"
+  },
+  "update": true
+}
