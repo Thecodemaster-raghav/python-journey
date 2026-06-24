@@ -43,8 +43,99 @@ print(greeting)
 # nested functions or when a function return a function
 def outer():
     def inner():
-        return "Raghav is a Loser but he will accomplish his dreams"
+        return "Raghav is learning decorators and accomplish his dreams"
     return inner # here the nested function rule meaning when we call the outer() func it will return what it is being passed on.
 
 nest_func = outer()
 print(nest_func())
+print(outer()())
+
+# the returned function still works later
+def make_greeting():
+    def greet():
+        return "namaste"
+    return greet
+saved = make_greeting()
+print(type(saved))
+print(saved())
+
+# outer takes an argument hat inner uses:
+def multiply(n):
+    def time(x):
+        return x*n
+    return time
+double = multiply(2)
+total = double(5)
+print(total)
+
+# Part 3: adding a behaviour arund a function and then wrapping it. DECORATOR
+def totals(num):
+# a decorator wraps the function as an extra behaviral element and hands back a wrapped version
+    def wrap_total():
+        print("How are you")
+        results = num() # this is the moment where the wrapped up originals gets executed
+        print("done")
+        return result # because no return passes a none
+    return wrap_total
+
+def get_total():
+    print("there is no total")
+
+task = totals(get_total)
+print(task()) # a function with no return statement hands back none.
+
+# the "@" swap: 
+@totals
+def my_total():
+    print("Manifestation works")
+
+my_total()
+
+# a decorator in python is just an automatic reassignment
+# the @ secretly runs my_total = totals(my_total)
+
+# reps to solidify
+def announce(obj):
+    def wrapper():
+        print("ENGINE START")
+        given_func = obj()
+        print("CYCLE ENDs")
+        return given_func
+    return wrapper
+
+def func_a():
+    print("doing reps")
+
+funcs = announce(func_a)
+funcs() # the manual way
+
+# using @
+@announce
+def func_b():
+    print("still doing reps")
+
+func_b()
+print(func_b) # this will show something as the python storing and of what type it is. like a function and some numbers
+# pointing at the data storage in python
+
+def order(middle):
+    def extra():
+        print("[")
+        value = middle()
+        print("]")
+        return value
+    return extra
+
+@order
+def extra_func():
+    print("i will work hard and get a job in big 2027")
+
+extra_func() # here the print 1 works with [ and then the extra_func which i introduced in the middle and then after that ]
+
+# two functions and 1 decorator
+@announce
+def second():
+    print("to show that the decorators can be used in 2 places not just one")
+
+func_b()
+second()
