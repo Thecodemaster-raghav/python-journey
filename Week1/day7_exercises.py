@@ -52,9 +52,9 @@ else:
     print("File not found") 
 
 # 2nd Run:
-import os
-if os.path.exists("nonexistent.txt"): 
-    with open("nenexistent.txt.txt") as f:
+path = "nonexistent.txt"
+if os.path.exists(path): 
+    with open(path) as f:
         file = f.read()
         print(file)
 else:

@@ -63,6 +63,7 @@ for k in results:
 # Rewriting the loop:
 for k, v in results.items():
     print(k, v) # here i have used .items to catch both keys and value.
-
+for key in results:
+    print(key, results[key]) # this will also fetch us the keys and values 
 # 3. as suggested in the above line 65 .items will also fetch for values not just keys
 # as we did in plain loop.

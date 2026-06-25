@@ -10,18 +10,17 @@
 # to calculate how any were answered and how many need reviewing and total answered.
 
 questions = {"Q1: Beta blockes": True, "Q2: ACE inhibitors": False, "Q3: ARBs": True, "Q4: Diuretics": False, "Q5: Statins": True}
-# this is how the keys and values would look like insde the questions dict
 
 def process_results(questions):
-    answered = []
+    answered = [] # answered holds the data of all the questions answered.
     wrongly_ans = []
     for q, v in questions.items():
-        answered.append(q)
+        answered.append(q) # as answered is an empty list we put all the keys inside to show that it works
         if v == False:
             wrongly_ans.append(q)
     return answered, wrongly_ans
 
-def calculate(answered, wrongly_ans):
+def calculate(answered, wrongly_ans): # here we calculate the score of rightly answered
     score = len(answered) - len(wrongly_ans)
     return score
 

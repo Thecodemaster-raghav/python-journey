@@ -10,14 +10,14 @@ def read_file(practicefile):
             total = total + int(amount)
             count[category] = int(amount)
     return total, count
-result = read_file("sample.txt")
+
 def print_reports(total, count):
     print(f"Total amount: {total}")
     for k, v in count.items():
         print(f"{k}: {v}")
 
 def main():
-    result, total = read_file("sample.txt")
-    print_reports(result, total)
-    
+    total, count = read_file("sample.txt")
+    print_reports(total, count)
+
 main()

@@ -8,16 +8,17 @@ expenses = {"grocery": 200, "transport": 150, "sendhome": 1300, "bills": 300, "r
 def sum_expenses(expenses):
     total = 0
     for e, v in expenses.items():
-        total = v + total
+        total = v + total # checking the total of the values inside expenses
     return total
 
 def amount_saved(salary, total):
-    saved = salary - total
+    saved = salary - total # to check the left amount after all expenses
     return saved
 
 def main():
     total = sum_expenses(expenses)
     saved = amount_saved(salary, total)
-    print(f"Amount saved: {saved}")
+    print(f"Amount saved: {saved}") # here checking how much is left using a main() function and calling the 2 funtions
+    # using 2 variables 
 
 main()
