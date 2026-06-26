@@ -139,3 +139,42 @@ def second():
 
 func_b()
 second()
+
+import json
+# rep 1 : roud trip with a lossy type
+dta = {"user": "raghav", "scores": (90, 85), "tag": {"py", "sql"}}
+
+def conversion(func):
+    if isinstance(func, set):
+        return list(dta["tag"])
+    
+saving_dta = json.dumps(dta, indent=2, default=conversion)
+load_dta = json.loads(saving_dta)
+print(load_dta) # tuple converts silently on its own, default func for the tag as it is a set
+
+# rep:2 write to a file, modify, re-save
+
+filename = {"user_email": "raghav.s@gmail.com", "user_form": "JEE MAINS"}
+def saving(filename):
+    with open("rep2.json", "w") as f:
+        json.dump(filename, f, indent=2)
+saving(filename)
+
+def load():
+    with open("rep2.json", "r") as p:
+        loaded = json.load(p)
+        loaded["filled_form"] = True
+        return loaded
+load()
+
+def data_back(updated_data):
+    with open("rep2.json", "w", encoding="utf-8") as file:
+        json.dump(updated_data, file, indent=2, sort_keys=True)
+
+data_back(load())
+
+# rep 3: deserialize 
+api = '{"results": [{"id":1, "score": 9}, {"id": 2, "score": 7}], "count": 2}'
+api_data = json.loads(api)
+print(api_data)
+print(api_data["results"][1]["score"])
