@@ -8,6 +8,18 @@
 # we will use inheritance for that
 # Thrid: Design - yes we will need a container to check how many reviews were there like total pearls
 # and then the method also checks for the difficulty but that is the inheritance part taht we will build.
+# chose this design as we wanted a container because it computes and the attributes are not different 
+# it has same data functions not different ones for different pearls
+
+# Teach Back for OOPS: for me genuinely i think classes and objects makes programming simple and instead of different functions 
+# doing different jobs and scattered in raw data we can put them together using classes and methods and 
+# using Inheritance we cn then further simplify the functionality of the classes with child classes have methods 
+# inherited from the parent class.
+
+#  in a nutshell: OOPS uses ENCAPSULATION to bundle ATTRIBUTES(data) and methods into a class;
+# Inheritance lets child class reuse parents METHODS;
+# Polymorphism lets the same method call behave differently per class.
+
 
 class Pearl:
     def __init__(self, pearl_id, difficulty, was_correct):

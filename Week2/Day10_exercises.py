@@ -107,7 +107,7 @@ for u in user_input:
     try:
         compute = 100 / u  
     except ZeroDivisionError:
-        print(f"wrong outputs: {u}")
+        pass
     else:
         data.append(compute)
     finally:

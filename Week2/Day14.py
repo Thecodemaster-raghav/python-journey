@@ -144,8 +144,8 @@ import json
 # rep 1 : roud trip with a lossy type
 dta = {"user": "raghav", "scores": (90, 85), "tag": {"py", "sql"}}
 
-def conversion(func):
-    if isinstance(func, set):
+def conversion(obj):
+    if isinstance(obj, set):
         return list(dta["tag"])
     
 saving_dta = json.dumps(dta, indent=2, default=conversion)

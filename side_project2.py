@@ -23,6 +23,15 @@ transactions.append(user_transaction_2)
 transactions.append(user_transaction_3)
 transactions.append(user_transaction_4)
 
+def log_call(func):
+    def wrapper(*args, **kwargs): # means accept any argumrnt however many.
+        print("calling savings")
+        result = func(*args, **kwargs) # here it means unpack and forward, *args, **kwargs.
+        print("savings recorded")
+        return result
+    return wrapper
+
+@log_call
 def savings(transactions):
     total = 0
     for t in transactions:

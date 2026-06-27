@@ -22,6 +22,7 @@ my_data = [
 def convert(obj):
     if isinstance(obj, Pearl):
         return obj.__dict__
+    raise TypeError
 
 # initiating a error handling block as sometimes we forget to encode
 try:

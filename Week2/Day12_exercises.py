@@ -52,8 +52,8 @@ my_store = Store("Indian Appliances")
 my_fridges = Fridge("LG", 1800, True)
 my_washers = Washer("Bosch", 2200, 7.4)
 my_dryers = Dryer("Samsung", 2400, "68 degrees", False)
-my_store.add_appliance(my_fridges)
+my_store.add_appliance(my_fridges) # here we are making the inventory
 my_store.add_appliance(my_washers)
 my_store.add_appliance(my_dryers)    
-my_store.power_on_all()
-print(f"Total package price: {my_store.total_value()}")
+my_store.power_on_all() # to get the power_on method on all appliances
+print(f"Total package price: {my_store.total_value()}") # to print the total price of all the appliances
