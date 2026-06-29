@@ -31,3 +31,14 @@ def amount_saved():
     travel_spendings = 1200
     count_total = {"savings_left": total_amount - travel_spendings}
     return count_total
+
+# Path parameters: a path param is a variable name in the URL that we type with curly braces in the route
+@app.get("/user/{name}") # same route but different data driven by the URL
+def user_name(name):
+    user_now = {"user": name, "jersey": 7}
+    return user_now
+
+@app.get("/double/{number}")
+def compute(number):
+    now_total = int(number) * 2
+    return now_total
