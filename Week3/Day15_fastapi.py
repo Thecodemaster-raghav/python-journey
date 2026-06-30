@@ -42,3 +42,21 @@ def user_name(name):
 def compute(number):
     now_total = int(number) * 2
     return now_total
+# we have to convert the input not the output. As URL values always arrive as string
+
+# to return the result as the labeled dict
+@app.get("/square/{num}")
+def squared(num):
+    calc_squares = int(num) * int(num) # always do type conversion before the output.
+    now_result = {"result": calc_squares} 
+    return now_result
+# term to lock in : A string is a sequence
+
+@app.get("/afford/{amount}")
+def calc_budget(amount):
+    if int(amount) < 1000:
+        user_budget = {"amount": int(amount), "affordable": True}
+    elif int(amount) >= 1000:
+        user_budget = {"amount": int(amount), "affordable": False}
+    return user_budget
+
