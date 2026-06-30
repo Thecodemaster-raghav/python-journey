@@ -52,11 +52,12 @@ def squared(num):
     return now_result
 # term to lock in : A string is a sequence
 
+# a route to tell the user abot the affordability
 @app.get("/afford/{amount}")
 def calc_budget(amount):
-    if int(amount) < 1000:
+    if int(amount) < 1000: # type conversion has to happen at input.
         user_budget = {"amount": int(amount), "affordable": True}
-    elif int(amount) >= 1000:
+    elif int(amount) >= 1000: # one thing to keep in mind is that the elif condition is gauranteed true.
         user_budget = {"amount": int(amount), "affordable": False}
     return user_budget
 
