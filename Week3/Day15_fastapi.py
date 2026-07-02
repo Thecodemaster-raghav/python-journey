@@ -61,3 +61,34 @@ def calc_budget(amount):
         user_budget = {"amount": int(amount), "affordable": False}
     return user_budget
 
+# Fast api- Next part: query params
+# it looks like /items?limit=10
+# here /items is the path meaning the route or room from which we are knocking from.
+# now the query param which is ?limit=10 so here key is limit and value is 10
+# and if we want to send more tha 1 we just join them with &
+# so it looks like /items?limit=10&skip=5 that is two query params
+
+@app.get("/items")
+def read_items(limit=20): # here we will be falling back to 20 as default as nothing is passed.
+    return limit # this is a query param as there is nothing passed between {} and so the URL wuld look like
+     # /items?limit=20
+     # return the dict which is limit.
+
+# exercises:
+@app.get("/greet")
+def user_name(name):
+    return {"Hello": name}
+
+# two query params at once:
+@app.get("/search")
+def user_search(keyword, limit: int=10): # in here the default value of limit is set as 10 but user can pass any value.
+    return {"keyword": keyword, "limit": limit, "type": type(limit).__name__}
+
+# part 3: the type gotcha revisit:
+# the same thing with the path params the URL converts the values as a stringeven though it is an int.
+
+# part 4:
+@app.get("/user/{user_id}/items") # the user_id sits in {} because it is part of the path
+def users(user_id: int, limit: int =10):
+    data = {"user_id": user_id, "limit": limit}
+    return data

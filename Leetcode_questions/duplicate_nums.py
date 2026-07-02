@@ -17,10 +17,10 @@ class Solution(object):
     def isDuplicate(self, nums):
         check = set()
         for n in nums:
-            if n in check:
+            if n in check: # to check if there is a duplicate inside of the list using a set
                 return True
             else:
-                check.add(n)
+                check.add(n) # to add the values which do not match inside of the set
         return False
 
 new_result = Solution().isDuplicate([1, 5, 6, 8])
