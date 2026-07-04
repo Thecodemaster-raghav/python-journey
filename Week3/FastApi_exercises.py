@@ -18,17 +18,18 @@ movies_data = [
 
 # route on with the data and movie_id's
 @app.get("/movies/{movie_id}")
-def data(movie_id: int):
+def read_data(movie_id: int):
     for i in movies_data:
-        if i["movie_id"] == movie_id: # so the if condition here is because we want to return what is present
-            # when a movie_id is called by the user.
+        if i["movie_id"] == movie_id:
             return i
-    return {"movie not in the list. Enter valid movie_id"}
+    return {"Error: movie_id not found"}
 
+# now filtering with query params
 @app.get("/filter")
-def read_data(genre, min_rating: float = 0.0):
+def filter_data(genre, min_rating: float=0.0):
     result = []
     for n in movies_data:
         if n["genre"] == genre and n["ratings"] >= min_rating:
             result.append(n)
     return result
+    
