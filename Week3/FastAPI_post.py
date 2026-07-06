@@ -12,6 +12,7 @@ from fastapi import FastAPI
 # just peple using it changes not the tools instilled in it.
 
 app = FastAPI()
+movies_db = [] # empty database
 
 class Movie(BaseModel):
     name : str
@@ -22,6 +23,7 @@ class Movie(BaseModel):
 
 @app.post("/movies")
 def create_movie(movie: Movie):
+    movies_db.append(movie)
     return movie # this will return the name director and ratings with validation and type conversion 
 # inherited from the BaseModel
 
@@ -35,3 +37,8 @@ def create_movie(movie: Movie):
 # : is what pydantic use. and all the type hints.
 
 # we inherit from Basemodel class as we do not want torewrite validation machinery
+
+# the get route
+@app.get("/movies")
+def read_data():
+    return movies_db
