@@ -24,3 +24,14 @@ class Movie(BaseModel):
 def create_movie(movie: Movie):
     return movie # this will return the name director and ratings with validation and type conversion 
 # inherited from the BaseModel
+
+# get carries data in the URL: POST carries data in the request body. 
+# and Swagger ui which is accessed by /docs route is a tool for sending that POST request body.
+
+# we are using pydantic model here because of the scale as in the get routes we used 
+# min_rating: float which is what the pydantic model does but here the scale is for the whole 
+# request body. or a structured object.
+# = to is the assignment operator and : is type annotation.
+# : is what pydantic use. and all the type hints.
+
+# we inherit from Basemodel class as we do not want torewrite validation machinery
