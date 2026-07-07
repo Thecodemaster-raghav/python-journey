@@ -42,3 +42,33 @@ def create_movie(movie: Movie):
 @app.get("/movies")
 def read_data():
     return movies_db
+
+# next on the CRUD operations is update.
+# starting off with pu.
+# what PUT does is updates an existing item
+# Post just created - it takes a body and appends. It did not need to know which item.
+# Put - on the other hand needs to know which movie it needs to replace the new data with.
+# so PUT needs 2 inputs working together: path param + request body combined.
+
+@app.put("/movies/{movie_id}")
+def update_data(movie_id: int, movie: Movie): # here the movie_id means which position
+    if movie_id < len(movies_db): # here we are checking for the out of bounds error.
+        movies_db[movie_id] = movie # than replace/update the movie_id here
+        return movie # than return the new movie list.
+    else:
+        return {"error": "movie not found"}
+    # the whole logic is if that movie exist replace the movie there and return it;
+    # otherwise say not found.
+
+# now the delete operation: .remove -> removes by value: meaning find an exact value in the list and delete it out.
+# .del -> del by index: which we need as we chaecking the indexes not by value.
+# so the tool would be del movies_db[movie_id] -> del the item at that index.
+
+@app.delete("/movies/{movie_id}")
+def remove_data(movie_id: int):
+    if movie_id < len(movies_db):
+        del movies_db[movie_id]
+        return {"movie has been deleted"}
+    else:
+        return {"error": "data out of bounds"}
+    
