@@ -92,3 +92,14 @@ def user_search(keyword, limit: int=10): # in here the default value of limit is
 def users(user_id: int, limit: int =10):
     data = {"user_id": user_id, "limit": limit}
     return data
+
+# async is used if we ever wait for something inside the function.
+# async is a way to write functions that can pause while waiting for something like slow.
+# and let the server do the work in the maintime, instead of sitting frozen.
+
+# now the post request with a request body. That enables clinet create something 
+# not only just look things up.
+# get is safe and is a ready only data no changes made to the server.
+# while POST creates or changes data and does also makes changes to the server.
+# A pydantic model lets us automatically validate and also converts type of the,
+# entire incoming POST request body.
