@@ -1,0 +1,20 @@
+[
+  {
+    "patient_name": "happy",
+    "age": 25,
+    "sickness_type": "headache",
+    "medication_type": "aspirin"
+  },
+  {
+    "patient_name": "raghav",
+    "age": 26,
+    "sickness_type": "fever",
+    "medication_type": "aspirin"
+  },
+  {
+    "patient_name": "happy",
+    "age": 26,
+    "sickness_type": "cough",
+    "medication_type": "syrup"
+  }
+]

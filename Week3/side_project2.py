@@ -30,7 +30,7 @@ transactions.append(user_transaction_3)
 transactions.append(user_transaction_4)
 
 def log_call(func):
-    def wrapper(*args, **kwargs): # means accept any argumrnt however many.
+    def wrapper(*args, **kwargs): # means accept any argument however many.
         print("calling savings")
         result = func(*args, **kwargs) # here it means unpack and forward, *args, **kwargs.
         print("savings recorded")
@@ -71,12 +71,3 @@ def save(transactions):
     
 v2_result = save(transactions)
 print(v2_result)
-
-# now loading the file back 
-def load(transactions):
-    with open("transaction.json", "r", encoding="utf-8") as file:
-        load_file = json.load(file)
-        new_transaction = []
-        for r in transactions:
-            new_dict = Transaction(**r)
-            new_transaction.append(new_dict)

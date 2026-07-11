@@ -4,12 +4,12 @@ from side_project2 import Transaction, json, transactions, datetime
 def load(file):
     with open("transaction.json", "r", encoding="utf-8") as file:
         load_transaction = json.load(file)
-        new_transactions = []
-        for i in load_transaction: # this loop makes the json file as dicts
-            now_total = Transaction(**i) # **i lets us unpack json keywords into arguments
-            new_transactions.append(now_total)
-        for r in new_transactions:
-            print(r.amount, r.date, r.type)
+        new_transaction = []
+        for i in load_transaction: # to make json file as dicts
+            new_data = Transaction(**i) # lets us unpack json to python args
+            new_transaction.append(new_data)
+        for r in new_transaction:
+            return r.amount, r.type, r.date
 
 result = load("transaction.json")
 print(result)
