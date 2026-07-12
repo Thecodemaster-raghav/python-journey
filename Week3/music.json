@@ -1,0 +1,20 @@
+[
+  {
+    "song_name": "The reminder",
+    "song_type": "chill/pop",
+    "sung_by": "The WeekEnd",
+    "spotify_listeners": 98000000
+  },
+  {
+    "song_name": "Ik Kudi",
+    "song_type": "Melody",
+    "sung_by": "Diljit Dosanjh",
+    "spotify_listeners": 25500000
+  },
+  {
+    "song_name": "Namo Namo",
+    "song_type": "Spiritual/Melody",
+    "sung_by": "Amit Trivedi",
+    "spotify_listeners": 25855462
+  }
+]
