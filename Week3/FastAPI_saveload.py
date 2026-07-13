@@ -37,15 +37,16 @@ def create_data(music_file: Music):
 
 @app.put("/music/{song_id}")
 def update_data(song_id: int, music_file: Music):
-    if 0 <= song_id < musicians_list[song_id]:
+    if 0 <= song_id < len(musicians_list):
         musicians_list[song_id] = music_file
+        save_data()
         return music_file
     else:
         raise HTTPException(status_code=404, detail="no songs found")
 
 @app.delete("/music/{song_id}")
 def del_data(song_id: int):
-    if 0 <= song_id < musicians_list[song_id]:
+    if 0 <= song_id < len(musicians_list):
         del musicians_list[song_id]
         save_data()
         return {"success": "music data is deleted"}
