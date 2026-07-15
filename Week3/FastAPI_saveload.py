@@ -30,6 +30,14 @@ musicians_list = load_data()
 def read_only():
     return musicians_list
 
+@app.get("/music/{song_id}")
+def read_one(song_id: int):
+    for r in musicians_list:
+        if r.song_id == song_id:
+            return r
+    else:
+        raise HTTPException(status_code=404, detail="no matching song found")
+
 @app.post("/music")
 def create_data(music_file: Music):
     biggest = 0
@@ -45,21 +53,21 @@ def create_data(music_file: Music):
 def update_data(song_id: int, music_file: Music):
     for s in musicians_list:
         if s.song_id == song_id:
-            i = musicians_list.index(s)
-            music_file.song_id = song_id
-            music_file = i
+            music_file.song_id = song_id # left side holds the id from the URL and right side is the new song_id
+            i = musicians_list.index(s) # here checking the position of the s in the list
+            musicians_list[i] = music_file # here changing the data at that posiiton or the URL id entered by client
             save_data()
             return music_file
     else: # else unindented as what happens per song lives inside.
         raise HTTPException(status_code=404, detail="no music file found")
 
 @app.delete("/music/{song_id}")
-def del_data(song_id: int):
-    for f in musicians_list:
-        if f.song_id == song_id:
-            t = musicians_list.index(f)
-            del musicians_list[t]
-            save_data()
+def del_data(song_id: int): 
+    for f in musicians_list: # visiting each song one at a time f = current song
+        if f.song_id == song_id: # is this song wearing the id from the URL?
+            t = musicians_list.index(f) # now t the temp variable; asks the list, what position is f at right now
+            del musicians_list[t] # remove the item at that position from the list
+            save_data() # than save the changed list to disk
             return {"success": "music data is deleted"}
     else:
         raise HTTPException(status_code=404, detail="no songs found")
