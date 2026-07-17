@@ -1,30 +1,9 @@
 [
   {
-    "song_name": "starboy",
+    "song_name": "jhanjhar",
     "song_type": "pop",
-    "sung_by": "weekend",
-    "spotify_listeners": 264578551,
-    "song_id": 1
-  },
-  {
-    "song_name": "Flower",
-    "song_type": "chill/melody",
-    "sung_by": "Gippy",
-    "spotify_listeners": 214521,
-    "song_id": 2
-  },
-  {
-    "song_name": "hanuman chalisa",
-    "song_type": "spiritual",
-    "sung_by": "marendar chanchal",
-    "spotify_listeners": 26461125,
-    "song_id": 4
-  },
-  {
-    "song_name": "hanuman chalisa",
-    "song_type": "spiritual",
-    "sung_by": "marendar chanchal",
-    "spotify_listeners": 26461125,
-    "song_id": 5
+    "sung_by": "gippy",
+    "spotify_listeners": 235654125,
+    "song_id": 6
   }
 ]

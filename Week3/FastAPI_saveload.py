@@ -12,6 +12,10 @@ class Music(BaseModel):
     spotify_listeners : int
     song_id : int | None = None
 
+# Edge case: when the load_data is fired with a wrong filename the empty list returns as in the code
+# noerros fired the data program quitely runs as the except branch hands back a empty list
+# that the whole program digests. But since we have music.json in w -> write mode and the file is rebuild.
+
 def load_data():
     try:
         with open("music.json", "r", encoding="utf-8") as f:
@@ -38,7 +42,9 @@ def read_one(song_id: int):
     else:
         raise HTTPException(status_code=404, detail="no matching song found")
 
-@app.post("/music")
+# known imitation: mx+1 id assignment; deleting the highest id allows reuse.
+# Acceptable: no external consumers.
+@app.post("/music") 
 def create_data(music_file: Music):
     biggest = 0
     for m in musicians_list:
