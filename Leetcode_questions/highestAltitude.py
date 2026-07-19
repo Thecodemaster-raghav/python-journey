@@ -1,12 +1,14 @@
 class Solution(object):
     def largestAltitude(self, gain):
-        starting = 0
+        current = 0 # the starting point of the cyclist
         highest = 0
-        for i in gain:
-            starting += i # to catch the running total
-            if starting > highest: # this means that if -5 + 0 = -5 which is less than that of 0 and all of those values are discarded. which are less than 0 and in our case only 1 was greater than 0 which was 1 and that is what we returned. traced on paper first
-                highest = starting
+        for i in gain: # counting the number of times cyclist gained the altitude
+            current += i # the new starting point becomes the current point and it is like catching the running total 
+            # so we add the gains into the current point to make that the new point of the cyclist
+            if current > highest:
+                highest = current
         return highest
 
-result = Solution().largestAltitude([-5,1,5,0,-7])
+
+result = Solution().largestAltitude([-4,-3,-2,-1,4,3,2])
 print(result)
