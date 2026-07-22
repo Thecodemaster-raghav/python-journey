@@ -1,0 +1,13 @@
+{
+  "stores": [
+    {
+      "name": "sports",
+      "store_id": 1
+    },
+    {
+      "name": "diner",
+      "store_id": 2
+    }
+  ],
+  "next_id": 3
+}

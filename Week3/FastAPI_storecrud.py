@@ -24,7 +24,7 @@ from datetime import datetime
 app = FastAPI()
 
 class Visit(BaseModel):
-    timestamp : datetime.now # needs a default as json not able to serialise datetime
+    timestamp : datetime # needs a default as json not able to serialise datetime
     store_id : int
     visit_id : int | None = None
 
@@ -83,7 +83,21 @@ def read_data(store_id: int):
         if r.store_id == store_id:
             new_list.append(r)
     return new_list
-        
-@app.post("/stores") # reusing the 
-def create_data(stores: Store):
 
+# POST goal is to give a new store a permanent id from the counter, then save
+@app.post("/stores") # reusing the next_id
+def create_data(store: Store):
+    global next_id  # reassigns the id
+    store.store_id = next_id # this line reads
+    next_id += 1
+    stores_list.append(store)
+    save_store_data()
+    return store
+
+def save_store_data():
+    store_data = [] # need a dict
+    for l in stores_list:
+        store_data.append(l.model_dump())
+    stores = {"stores": store_data, "next_id": next_id} # no type names, need values 
+    with open("stores.json", "w", encoding="utf-8") as f:
+        json.dump(stores, f, indent=2)
