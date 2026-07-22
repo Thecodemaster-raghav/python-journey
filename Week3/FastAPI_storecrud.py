@@ -37,12 +37,12 @@ def load_data_visits(filename): # the edge case for error handling
         with open(filename, "r") as newfile:
             load_visit = json.load(newfile)
     except FileNotFoundError:
-        return []
+        return [], 1
     new_data = [] # returning looping only one using a model param which decides hen called which model to choose
-    for s in load_visit:
+    for s in load_visit["visits"]:
         data = Visit(**s) # converting json to python args
         new_data.append(data)
-    return new_data
+    return new_data, load_visit["new_id"]
 
 def load_data_stores(filename): # loads data for the store as a design choice; as the type is different to
     # that of the visit as we load visits as a list and store as a dict
@@ -58,7 +58,7 @@ def load_data_stores(filename): # loads data for the store as a design choice; a
     return stores_data, load_store["next_id"]
 
 
-visits_list = load_data_visits("visits.json") # pass the class so function can initiate it N times in the loop 
+visits_list, new_id = load_data_visits("visits.json") # pass the class so function can initiate it N times in the loop 
 # that is why no single empty object.
 stores_list, next_id = load_data_stores("stores.json") 
 
@@ -94,10 +94,31 @@ def create_data(store: Store):
     save_store_data()
     return store
 
+# the method where we do deduplication of the code is called the DRY(donot repeat yourself) method 
+# where we an just create a function (for future builds)
+# so that we are not using a duplicate chunk of code and initiate that 
+@app.post("/stores/{store_id}/visits")
+def create_new_data(store_id: int):
+    found = False # same checking program as that of GET
+    for c in stores_list:
+        if c.store_id == store_id:
+            found = True
+        if not found:
+            raise HTTPException(status_code=404, detail="no store found")
+    # building a visit object 
+
 def save_store_data():
-    store_data = [] # need a dict
+    store_data = []
     for l in stores_list:
         store_data.append(l.model_dump())
-    stores = {"stores": store_data, "next_id": next_id} # no type names, need values 
+    data = {"store": store_data, "next_id": next_id}
     with open("stores.json", "w", encoding="utf-8") as f:
-        json.dump(stores, f, indent=2)
+        json.dump(data, f, indent=2)
+
+def save_visit_data():
+    visit_data = []
+    for v in visits_list:
+        visit_data.append(v.model_dump())
+    v_data = {"visits": visit_data, "new_id": new_id}
+    with open("visits.json", "w", encoding="utf-8") as file:
+        json.dump(v_data, file, indent=2)
