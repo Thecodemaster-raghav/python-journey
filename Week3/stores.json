@@ -1,0 +1,29 @@
+{
+  "stores": [
+    {
+      "name": "footlocker",
+      "store_id": 1
+    },
+    {
+      "name": "library",
+      "store_id": 2
+    },
+    {
+      "name": "whiskey shop",
+      "store_id": 3
+    },
+    {
+      "name": "walmart",
+      "store_id": 4
+    },
+    {
+      "name": "Book shop",
+      "store_id": 5
+    },
+    {
+      "name": "Desi tadka fine dine restaurant",
+      "store_id": 6
+    }
+  ],
+  "next_id": 7
+}

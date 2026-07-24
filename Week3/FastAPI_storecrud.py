@@ -70,6 +70,37 @@ def read_stores():
 def read_visits():
     return visits_list
 
+# aggregations over time: means counting events grouped by some slice of the timetamp.
+@app.get("/stores/{store_id}/peak-hours")
+def data_agg(store_id: int):
+    new_data = [] # for collecting the hours.
+    hour_data = {}
+    highest_count = 0
+    best_hour = None # edge case if no visit happens to the store
+    correct = False
+    for m in stores_list:
+        if m.store_id == store_id:
+            correct = True
+    if not correct:
+        raise HTTPException(status_code=404, detail="no stores found")
+    for i in visits_list: # getting the hours from the timestamp using loop and the collecting them in the list
+        if i.store_id == store_id:
+            hour = i.timestamp.hour
+            new_data.append(hour)
+    for e in new_data: # building a dict to map the hours and count
+        if e in hour_data:
+            hour_data[e] += 1
+        else:
+            hour_data[e] = 1
+    for k,v in hour_data.items(): # to get the best hour and highest no of visits
+        if v > highest_count:
+            best_hour = k
+            highest_count = v
+    return {"best_hour":best_hour, "highest_count": highest_count}
+
+
+# this is an event log timestamped facts about things that have happened 
+# in data engineering vocab: a store is a DIMENSION and a visit is FACT
 @app.get("/stores/{store_id}/visits") # filter by store visits to the matching id from the visits to url
 def read_data(store_id: int):
     new_list = []
@@ -77,14 +108,15 @@ def read_data(store_id: int):
     for s in stores_list:
         if s.store_id == store_id: # to check if url store_id matching the store_id in the list if not 
             exists = True # have a varibale with a boolean value that return whether true or false 
-        if not exists: # and store_id not found raise an exception
-            raise HTTPException(status_code=404, detail="no store present")
+    if not exists: # and store_id not found raise an exception
+        raise HTTPException(status_code=404, detail="no store present")
     for r in visits_list:
         if r.store_id == store_id:
             new_list.append(r)
     return new_list
 
 # POST goal is to give a new store a permanent id from the counter, then save
+# store is the reference data of the entities that exists
 @app.post("/stores") # reusing the next_id
 def create_data(store: Store):
     global next_id  # reassigns the id
@@ -99,26 +131,34 @@ def create_data(store: Store):
 # so that we are not using a duplicate chunk of code and initiate that 
 @app.post("/stores/{store_id}/visits")
 def create_new_data(store_id: int):
-    found = False # same checking program as that of GET
-    for c in stores_list:
-        if c.store_id == store_id:
-            found = True
-        if not found:
-            raise HTTPException(status_code=404, detail="no store found")
-    # building a visit object 
+    global new_id # reassigns the new_id
+    found = False
+    for a in stores_list:
+        if a.store_id == store_id:
+            found = True # to check whether the store exists; that is passed in the URL
+    if not found:
+        raise HTTPException(status_code=404, detail="no stores found")
+    # builduing the visit obj
+    visit_obj = Visit(store_id=store_id, timestamp=datetime.now(), visit_id=new_id)
+    new_id += 1 # incrementing the new_id; a conuter
+    visits_list.append(visit_obj) # saving the obj in the list for it
+    save_visit_data()
+    return visit_obj
 
 def save_store_data():
     store_data = []
     for l in stores_list:
         store_data.append(l.model_dump())
-    data = {"store": store_data, "next_id": next_id}
+    data = {"stores": store_data, "next_id": next_id}
     with open("stores.json", "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
+# to serialize the mode arguments can be set to 'json' to ensure json compatile types are used 
+# an in our case we have a datetime value to serialise so will use mode='json'
 def save_visit_data():
     visit_data = []
     for v in visits_list:
-        visit_data.append(v.model_dump())
+        visit_data.append(v.model_dump(mode='json')) # to make the values compatible to json
     v_data = {"visits": visit_data, "new_id": new_id}
     with open("visits.json", "w", encoding="utf-8") as file:
         json.dump(v_data, file, indent=2)

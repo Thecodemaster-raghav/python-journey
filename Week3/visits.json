@@ -1,0 +1,15 @@
+{
+  "visits": [
+    {
+      "timestamp": "2026-07-23T20:21:56.989760",
+      "store_id": 1,
+      "visit_id": 1
+    },
+    {
+      "timestamp": "2026-07-23T20:37:34.264879",
+      "store_id": 2,
+      "visit_id": 2
+    }
+  ],
+  "new_id": 3
+}
