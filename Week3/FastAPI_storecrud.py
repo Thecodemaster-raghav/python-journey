@@ -77,12 +77,7 @@ def data_agg(store_id: int):
     hour_data = {}
     highest_count = 0
     best_hour = None # edge case if no visit happens to the store
-    correct = False
-    for m in stores_list:
-        if m.store_id == store_id:
-            correct = True
-    if not correct:
-        raise HTTPException(status_code=404, detail="no stores found")
+    match_id(store_id) # signature mismatches are always a TypeError
     for i in visits_list: # getting the hours from the timestamp using loop and the collecting them in the list
         if i.store_id == store_id:
             hour = i.timestamp.hour
@@ -104,12 +99,7 @@ def data_agg(store_id: int):
 @app.get("/stores/{store_id}/visits") # filter by store visits to the matching id from the visits to url
 def read_data(store_id: int):
     new_list = []
-    exists = False # false at the start; only true if the match is found in stores loop
-    for s in stores_list:
-        if s.store_id == store_id: # to check if url store_id matching the store_id in the list if not 
-            exists = True # have a varibale with a boolean value that return whether true or false 
-    if not exists: # and store_id not found raise an exception
-        raise HTTPException(status_code=404, detail="no store present")
+    match_id(store_id)
     for r in visits_list:
         if r.store_id == store_id:
             new_list.append(r)
@@ -132,12 +122,7 @@ def create_data(store: Store):
 @app.post("/stores/{store_id}/visits")
 def create_new_data(store_id: int):
     global new_id # reassigns the new_id
-    found = False
-    for a in stores_list:
-        if a.store_id == store_id:
-            found = True # to check whether the store exists; that is passed in the URL
-    if not found:
-        raise HTTPException(status_code=404, detail="no stores found")
+    match_id(store_id)
     # builduing the visit obj
     visit_obj = Visit(store_id=store_id, timestamp=datetime.now(), visit_id=new_id)
     new_id += 1 # incrementing the new_id; a conuter
@@ -162,3 +147,17 @@ def save_visit_data():
     v_data = {"visits": visit_data, "new_id": new_id}
     with open("visits.json", "w", encoding="utf-8") as file:
         json.dump(v_data, file, indent=2)
+
+# refactoring: finding the matching store id as of the URL
+def match_id(store_id):
+    correct = False # false at the start; only true if the match is found in stores loop
+    for n in stores_list:
+        if n.store_id == store_id:
+            correct = True # to check whether the store exists; that is passed in the URL
+    if not correct: # and store_id not found raise an exception
+        raise HTTPException(status_code=404, detail="no matching stores found")
+    
+# signature mismatches are always TyepError and an uncaught exception is always 5xx -> internal sever error
+# which means the code is wrong but this gets missed in FastAPI.
+# 4xx is clients fault
+    

@@ -116,3 +116,4 @@ def save_data():
 # FastAPI sends 200 as the default whenver the function returns normally.
 # error 400 -> when the client fills out wrong information.
 # error 404 -> the resource does not exist
+# error 5xx -> Internal server Error your fault meaning fault in code
