@@ -130,6 +130,25 @@ def create_new_data(store_id: int):
     save_visit_data()
     return visit_obj
 
+# Delete operation: 
+# using status_code 409 conflict: meaning the same request that could change later without changing it,
+# that is a 409 request
+# shape of the design match_id(stores) -> raise 404 if exception, visit_list scan raise 409 if absent
+# 3rd step -> actual removal
+# step 4: persistence using save_
+# step 5: walk the list and identify which element carries that store_id 
+# and asign a variable to .remove(n) which would e an object nt an int against stores_list
+@app.delete("/stores/{store_id}")
+def delete_data(store_id: int):
+    holds_obj = None
+    has_visits = False
+    match_id(store_id)
+    for n in visits_list:
+        if n.store_id == store_id:
+            has_visits = True
+    if has_visits: # BLOCKER which we need to not delete the visits
+        raise HTTPException(status_code=409, detail="matching id found; no deletion")
+
 def save_store_data():
     store_data = []
     for l in stores_list:
@@ -157,7 +176,17 @@ def match_id(store_id):
     if not correct: # and store_id not found raise an exception
         raise HTTPException(status_code=404, detail="no matching stores found")
     
+    
 # signature mismatches are always TyepError and an uncaught exception is always 5xx -> internal sever error
 # which means the code is wrong but this gets missed in FastAPI.
 # 4xx is clients fault
-    
+
+# the design pattern and choice for delete
+# cascade: A delete that propogates. Meaning if you remove the parent and everything pointing
+# at the parent gets deleted too automatically
+# for refuse and cascade we are applying this rule to refuse if deleting would destroy
+# analytic data
+# and store exisiting is what this decision possible, but if the visit is there than that would 
+# make it harmful for us to delete because deleting a visit would directly impact the analytical data
+# so when a store has 0 visits and that nothing went downstream no visit exists.
+# So nothing to protect; In that case the delte should succeed
