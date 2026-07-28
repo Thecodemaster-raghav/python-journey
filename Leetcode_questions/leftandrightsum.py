@@ -17,3 +17,24 @@ class Solution(object):
 
 result = Solution().LeftRightSum([10, 4, 8, 3])
 print(result)
+
+# now the o(n) version
+class newSum(object):
+    def getleftRight(self, nums):
+        lefts = 0
+        rights = sum(nums)
+        leftSum = []
+        rightSum = []
+        answers = []
+        for n in range(len(nums)):
+            leftSum.append(lefts)
+            rights -= nums[n]
+            rightSum.append(rights)
+            nowBoth = abs(lefts - rights)
+            lefts += nums[n] # we have shifted the left side operation down below as we need 
+            # both the rights and lefts to be in the same state to get the required list
+            answers.append(nowBoth)
+        return answers
+
+new_result = newSum().getleftRight([10, 4, 8, 3])
+print(new_result)
