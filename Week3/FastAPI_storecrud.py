@@ -130,6 +130,27 @@ def create_new_data(store_id: int):
     save_visit_data()
     return visit_obj
 
+
+
+# put operation: no visit updation as those are time stamped facts - server authoratative.
+# firstly if the store_id matches the URL id put in by the client then only the updation happens 
+# shape shall be if the store is present than good if not return 404 -> match_id(store_id)
+# than check whether the url store is the same as that of the clients store
+@app.put("/stores/{store_id}")
+def update_data(store_id: int, stores: Store):
+    holds_obj = None
+    match_id(store_id)
+    if stores.store_id is not None and stores.store_id != store_id: # the and operator checks whether an input was
+        # provided by the client 
+        raise HTTPException(status_code=400, detail="no matching store_id")
+    for e in stores_list:
+        if e.store_id == store_id:
+            holds_obj = e
+    holds_obj.name = stores.name # the assignment of the name from clients side.
+    save_store_data()
+    return {"stores": holds_obj, "message":"success, name is updated"}
+
+
 # Delete operation: 
 # using status_code 409 conflict: meaning the same request that could change later without changing it,
 # that is a 409 request
