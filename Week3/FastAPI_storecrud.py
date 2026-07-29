@@ -137,7 +137,7 @@ def create_new_data(store_id: int):
 # 3rd step -> actual removal
 # step 4: persistence using save_
 # step 5: walk the list and identify which element carries that store_id 
-# and asign a variable to .remove(n) which would e an object nt an int against stores_list
+# and asign a variable to .remove(n) which would be an object an an int against stores_list
 @app.delete("/stores/{store_id}")
 def delete_data(store_id: int):
     holds_obj = None
@@ -148,6 +148,13 @@ def delete_data(store_id: int):
             has_visits = True
     if has_visits: # BLOCKER which we need to not delete the visits
         raise HTTPException(status_code=409, detail="matching id found; no deletion")
+    for n in stores_list:
+        if n.store_id == store_id:
+            holds_obj = n
+    stores_list.remove(holds_obj)
+    save_store_data()
+    return {"success, store is deleted"}
+    
 
 def save_store_data():
     store_data = []
