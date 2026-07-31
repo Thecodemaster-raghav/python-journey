@@ -218,3 +218,20 @@ def match_id(store_id):
 # make it harmful for us to delete because deleting a visit would directly impact the analytical data
 # so when a store has 0 visits and that nothing went downstream no visit exists.
 # So nothing to protect; In that case the delte should succeed
+
+# mock questions answers for this api:
+# why were the visits timestamps server assigned.
+# this is because we do not want data to be manipulated and 
+# never trust the client for data you're going to make decisions on.
+
+# the tradeoffs - That gap between read and write is the whole problem.
+#  The operation isn't atomic — atomic means indivisible, nothing can slip in partway through.
+
+# Vocabulary from this section, named against your code: 
+# Concurrency — multiple requests in flight at once
+# Race condition — the outcome depends on which request happens to get there first
+# Atomic — an operation nothing can interrupt partway; your new_id += 1 is not
+# Last-writer-wins — whole-file rewrites, second writer erases the first
+
+# The whole tradeoff - JSON works for one client, breaks under concurrency in two specific ways, 
+# and Postgres fixes both for specific reasons.
