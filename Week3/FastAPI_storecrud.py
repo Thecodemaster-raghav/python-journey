@@ -235,3 +235,13 @@ def match_id(store_id):
 
 # The whole tradeoff - JSON works for one client, breaks under concurrency in two specific ways, 
 # and Postgres fixes both for specific reasons.
+
+# authentication: 401 Unauthorized — I don't know who you are. No valid credentials.
+# 403 Forbidden — I know exactly who you are, and you're not allowed to do this.
+# Way to hold it: 401 is "who are you?", 403 is "I know who you are, and no."
+# HTTPS ≠ authentication ≠ authorization; JWT is a format, OAuth is a delegation protocol
+# Confidentiality vs integrity — reads leak, writes destroy
+# 401 vs 403 — identity vs permission
+# Ownership must exist in the schema before any check is possible
+# Store a fact once, reference it everywhere
+# Statelessness is what makes token auth work
