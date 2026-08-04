@@ -1,0 +1,201 @@
+# Caching — session notes
+
+Context: the `GET /stores/{store_id}/peak-hours` route in `FastAPI_storecrud.py`.
+
+---
+
+## The problem being solved
+
+The peak-hours route scans every record in `visits_list` on every request.
+
+With ~73,000 visits, one request touches all 73,000 records to return a single hour
+and a single count. Complexity is **O(n)** in total visits.
+
+The consequence: latency grows linearly with history. The API gets slower every day
+it runs, forever. It does not crash — it degrades.
+
+**Database indexing** partly helps: an index on `store_id` lets the database jump
+straight to store 3's visits instead of reading and discarding every other store's.
+But if store 3 itself has 73,000 visits, the scan over *those* is still O(n).
+
+That remaining problem is what caching addresses.
+
+---
+
+## The observation everything rests on
+
+Visits are immutable facts. Once written, a visit never changes.
+
+Between this morning's request and this afternoon's, the old visits are identical —
+only new ones were appended. Yet every request recomputes the entire history.
+
+The fix is not a faster scan. It is **not scanning the same data twice**.
+
+---
+
+## What a cache is
+
+A variable that holds the *computed result* between requests.
+
+Important: the cache stores **answers**, not visits.
+
+```
+peak_cache = {}     # keyed by store_id
+```
+
+### The check-first pattern
+
+**Request 1** — cache is empty for store 3.
+Scan → compute `{"best_hour": 14, "highest_count": 4821}` → **store it** → return.
+This is a **cache miss**.
+
+**Request 2** — check the cache *before* doing any work.
+Answer is there → return it. `visits_list` is never touched.
+This is a **cache hit**.
+
+The order matters: check first, work only on a miss.
+
+---
+
+## Staleness
+
+A visit is POSTed to store 3 at 3pm (hour 15).
+
+The next peak-hours request hits the cache and returns hour 14, count 4821 —
+the answer computed *before* that visit existed.
+
+The cached value no longer reflects reality. The term is **stale**.
+
+The danger: no error, no warning. The client receives a confidently wrong answer.
+
+So caching creates a new obligation — the write path must deal with the cache.
+
+---
+
+## Two strategies for the write path
+
+Cache currently holds: store 3 → hour 14, count 4821. A visit is POSTed.
+
+### Invalidate
+
+Delete store 3's entry. Cache now holds nothing for store 3.
+The POST is cheap — one deletion, no scanning.
+The next read finds a miss and rebuilds the answer.
+
+### Update
+
+Recompute the answer immediately during the POST and overwrite the cached value.
+The POST is expensive — it scans the full history.
+The next read is instant.
+
+### Choosing between them
+
+The difference is **where the cost lands** — on the write, or on the next read.
+
+Assume one store: 200 visits/day (200 POSTs), dashboard checked twice/day (2 GETs).
+
+| Strategy | Recomputes per day | Comes from |
+|---|---|---|
+| Update on write | 200 | the write count |
+| Invalidate | at most 2 | the read count |
+
+Each strategy inherits its recompute count from a different request type.
+
+**Rule: update-on-write pays per write; invalidate pays per read. Pick whichever
+event is rarer.**
+
+Here writes vastly outnumber reads, so **invalidate wins**.
+
+Flip the traffic — 5 visits/day but a wall dashboard refreshing every minute
+(~1,000 reads/day) — and update-on-write becomes the better choice.
+
+---
+
+## Per-key invalidation
+
+The cache is keyed per store:
+
+```
+{3: {...store 3's answer...}, 5: {...store 5's answer...}}
+```
+
+A visit POSTed to store 3 only makes **store 3's** answer wrong. Store 5's visits
+did not change, so its answer is still correct.
+
+So the POST route deletes **only the key for the store in its URL**. One line, not
+a loop over all stores.
+
+`POST /stores/5/visits` → delete key 5. Stores 3, 7, 12 keep their cached answers
+and still get hits.
+
+---
+
+## Lazy filling
+
+Creating a store does **not** create a cache entry.
+
+An entry appears the first time someone *asks* for that store's peak-hours.
+
+Worked example: store 9 is created and receives 40 visits, but nobody has ever
+requested its peak-hours.
+→ The cache holds **nothing** for store 9. The 40 visits are in `visits_list`;
+the cache only holds computed answers.
+
+When someone finally asks: **miss → scan → compute → store → return.**
+Nothing to delete — the entry never existed. A miss is a miss whether the entry
+was deleted or never created.
+
+**The cache only ever holds answers to questions that have actually been asked.**
+
+---
+
+## Unbounded cache growth
+
+The cache grows by one entry per store that gets queried. With ten stores, trivial.
+With 500,000 stores each queried once, you are holding 500,000 answers in memory.
+
+Memory is finite. This is how caches take down servers.
+
+### Two standard defences
+
+**Eviction policy** — cap the cache size. When full, drop something.
+The common rule is **LRU (least recently used)**: discard whatever has gone longest
+without being requested, on the bet it will not be requested soon.
+
+**TTL (time to live)** — each entry gets an expiry, e.g. five minutes. Past that it
+is discarded whether or not anything invalidated it.
+
+TTL also buys **staleness protection without perfect invalidation**. If an
+invalidation is missed somewhere, the entry still dies within five minutes.
+Real systems often run both together.
+
+Neither is needed for this API — a handful of stores, tiny entries. Knowing *why*
+they exist is the interview answer.
+
+---
+
+## Vocabulary
+
+| Term | Meaning |
+|---|---|
+| **Cache hit** | The answer was already stored; the work was skipped |
+| **Cache miss** | Nothing stored; do the work, then store it |
+| **Stale** | The cached value no longer reflects reality |
+| **Invalidate** | Delete the cached entry so the next read rebuilds it |
+| **Update on write** | Recompute and overwrite during the write itself |
+| **Lazy filling** | Entries created on first request, not up front |
+| **Unbounded growth** | Cache size rising without limit; a memory risk |
+| **Eviction / LRU** | Capping size by discarding least-recently-used entries |
+| **TTL** | Expiry time after which an entry is discarded regardless |
+
+---
+
+## Interview-shaped summary
+
+The peak-hours endpoint is an O(n) scan over all visits, so latency grows with
+history. Visits are immutable, so the same records are recounted on every request.
+Caching the computed answer per store removes that repetition. Because writes
+outnumber reads heavily in this workload, the write path **invalidates** the
+affected store's entry rather than recomputing it — pushing the cost onto the rare
+read instead of the frequent write. At scale the cache would need an eviction
+policy and a TTL to bound memory and limit staleness.
