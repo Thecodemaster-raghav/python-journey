@@ -199,3 +199,148 @@ outnumber reads heavily in this workload, the write path **invalidates** the
 affected store's entry rather than recomputing it — pushing the cost onto the rare
 read instead of the frequent write. At scale the cache would need an eviction
 policy and a TTL to bound memory and limit staleness.
+
+# Pre-aggregation — session notes
+
+Context: the `GET /stores/{store_id}/peak-hours` route in `FastAPI_storecrud.py`.
+Follows on from the caching notes — same problem, different solution.
+
+---
+
+## The idea
+
+Caching stores the **finished answer**, computed on demand and thrown away when stale.
+
+Pre-aggregation stores a **running count**, updated as each new record arrives.
+
+Alongside `visits.json`, imagine a second structure:
+
+```
+store 3 → {14: 4821, 15: 3902, 16: 2100, ...}
+```
+
+One entry per hour, holding how many visits landed in that hour.
+It holds counts, **not the visits themselves**.
+
+---
+
+## Why the read cost stops growing
+
+The keys are hours of the day. So the dict can hold **at most 24 entries** — ever.
+
+To find the busiest hour, peak-hours takes the max over those counts.
+That reads 24 entries instead of 73,000.
+
+And it stays 24 forever. Year two, year five, still 24.
+
+**Key property: the read cost stops growing with history.**
+
+Contrast with caching, which avoided *repeated* work but still paid a full O(n) scan
+on every miss. Pre-aggregation makes the work permanently small.
+
+---
+
+## The cost: maintaining it on write
+
+The counts dict has to be kept accurate.
+
+A visit is POSTed to store 3 at 3pm — hour 15, currently reading 3902.
+
+The POST route does one extra thing:
+extract the hour from the timestamp, then **increment that hour's count by one**.
+
+3902 → 3903.
+
+That is constant work. It does not care how much history exists.
+
+Note: nothing resets at midnight. Raw events are kept and counts accumulate —
+consistent with the original design decision that summaries are derived, not
+destructive.
+
+---
+
+## The three approaches side by side
+
+| | Read cost | Write cost |
+|---|---|---|
+| **Plain scan** | O(n) — all 73,000 records | nothing extra |
+| **Caching + invalidate** | O(n) on a miss, instant on a hit | one deletion |
+| **Pre-aggregation** | 24 entries, always | one increment |
+
+Pre-aggregation looks strictly better on both columns. So why not always use it?
+
+---
+
+## The real limitation: rigidity
+
+The counts dict answers exactly **one** question: *which hour is busiest for this store.*
+
+Client asks: **which day of the week is busiest?**
+The dict cannot answer it. It only ever counted hours.
+
+**A pre-aggregation answers only the question it was designed for.**
+
+### The tradeoff, stated properly
+
+**Caching is flexible.** It stores whatever any route computed, so a brand-new
+endpoint gets caching for free. But the first read still costs a full scan.
+
+**Pre-aggregation is fast and stays fast**, but every new question needs its own
+rollup built and maintained. Day-of-week counts? Second dict, second increment in
+the POST route. Month? Third.
+
+---
+
+## Backfill
+
+A second cost, and the one that is easy to forget.
+
+Add a day-of-week rollup today. From now on every POST increments it.
+But the 73,000 existing visits were written **before that code existed** — none of
+them ever touched the new dict.
+
+So the rollup starts at zero and only reflects visits from today onward.
+It is wrong for a year of history.
+
+### Direction matters
+
+- **Source:** the old visits in `visits.json` — unchanged, already there.
+- **Target:** the new, empty rollup — this is what gets filled.
+
+The fix is a **one-time job**: scan all 73,000 visits, count them into the new dict,
+save. After that, POST maintains it going forward.
+
+**POST cannot do this.** POST only fires when a *new* visit arrives; it can never
+reach into the past. Two different mechanisms:
+
+- **Backfill** handles the past — run once, separately.
+- **POST** handles the future — runs on every write.
+
+**General shape: pre-aggregation is only correct for data that existed after it was
+built. Anything older has to be filled in deliberately.**
+
+The same word applies well beyond this case — adding a column, adding an index,
+changing a schema. Existing rows need backfilling.
+
+---
+
+## Vocabulary
+
+| Term | Meaning |
+|---|---|
+| **Pre-aggregation / rollup** | A running summary updated as records arrive |
+| **Increment on write** | The write path adds 1 to the relevant count |
+| **Rigidity** | A rollup answers only the question it was designed for |
+| **Backfill** | Populating a new structure from data that predates it |
+
+---
+
+## Interview-shaped summary
+
+Peak-hours is an O(n) scan whose latency grows with history. Caching removes the
+repeated work but still pays a full scan on every miss. Pre-aggregation removes the
+scan entirely: a per-store, per-hour counts table is incremented on write, so the
+read touches at most 24 rows and stays constant as history grows. The tradeoff is
+rigidity — the rollup answers only the question it was built for, so each new
+question needs its own rollup — plus a one-time backfill to account for data that
+predates it.
