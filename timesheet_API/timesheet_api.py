@@ -25,3 +25,7 @@
 # PUT /shifts/{shift_id}/update-entry — admin correction
 # 403 if role isn't admin
 # GET aggregation route — hours across shifts, computed on demand
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+app = FastAPI()
