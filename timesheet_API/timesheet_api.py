@@ -27,5 +27,23 @@
 # GET aggregation route — hours across shifts, computed on demand
 
 from fastapi import FastAPI
-from pydantic import BaseModel
-app = FastAPI()
+import os
+from dotenv import load_dotenv
+from contextlib import asynccontextmanager
+from psycopg_pool import AsyncConnectionPool
+from psycopg.rows import dict_row
+
+load_dotenv() # loads the file into the environment
+database_conn = os.environ["DATABASE_URL"] # connection string for postgres
+
+@asynccontextmanager # the decoratore for the lifespan
+async def lifespan(app: FastAPI): # the lifespan itself
+    # inside the lifespan above the yield is the pool creation
+    # state an attribute FastAPI provides for storing anything that needs to live for the whole app and be reachable
+    app.state.conn_pool = AsyncConnectionPool(database_conn) 
+    yield
+    # below yield is the shutdown code
+    await app.state.conn_pool.close() # shutsd own the pool and releses the connection so no stale connection process linger
+
+
+app = FastAPI(lifespan=lifespan)
