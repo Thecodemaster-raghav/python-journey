@@ -26,24 +26,37 @@
 # 403 if role isn't admin
 # GET aggregation route — hours across shifts, computed on demand
 
-from fastapi import FastAPI
-import os
-from dotenv import load_dotenv
+from fastapi import FastAPI, Request, Depends
 from contextlib import asynccontextmanager
+import os
 from psycopg_pool import AsyncConnectionPool
+from dotenv import load_dotenv
 from psycopg.rows import dict_row
 
-load_dotenv() # loads the file into the environment
-database_conn = os.environ["DATABASE_URL"] # connection string for postgres
+load_dotenv() # loading the connection
+database_conn = os.environ["DATABASE_URL"] # Connection string to postgres
 
-@asynccontextmanager # the decoratore for the lifespan
-async def lifespan(app: FastAPI): # the lifespan itself
-    # inside the lifespan above the yield is the pool creation
-    # state an attribute FastAPI provides for storing anything that needs to live for the whole app and be reachable
-    app.state.conn_pool = AsyncConnectionPool(database_conn) 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # opening up the connection to postgres
+    #kwargs the argument is the dict of settings passed through, row_factory is the setting itself
+    app.state.conn_pool = AsyncConnectionPool(database_conn, kwargs={"row_factory": dict_row}) 
     yield
-    # below yield is the shutdown code
-    await app.state.conn_pool.close() # shutsd own the pool and releses the connection so no stale connection process linger
-
+    # shutdown the connection
+    await app.state.conn_pool.close()
 
 app = FastAPI(lifespan=lifespan)
+
+# dependency function : same shape as of the lifespan function but at a smaller scale
+async def get_conn(request: Request):
+    async with request.app.state.conn_pool.connection() as conn: # as this is a connection not a pool
+        yield conn
+
+
+# the GET route
+@app.get("/shifts")
+async def read_data(conn= Depends(get_conn)): # depends points out at where the data gets readed from
+    async with conn.cursor() as cur: # cursor is what helps us talk with the database 
+        await cur.execute("SELECT * FROM shifts") # accessing shifts table using .execute
+        rows = await cur.fetchall() # fetching all the shifts data
+        return rows # returning rows 
