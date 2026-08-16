@@ -26,12 +26,13 @@
 # 403 if role isn't admin
 # GET aggregation route — hours across shifts, computed on demand
 
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request, Depends, HTTPException
 from contextlib import asynccontextmanager
 import os
 from psycopg_pool import AsyncConnectionPool
 from dotenv import load_dotenv
 from psycopg.rows import dict_row
+from pydantic import BaseModel
 
 load_dotenv() # loading the connection
 database_conn = os.environ["DATABASE_URL"] # Connection string to postgres
@@ -47,6 +48,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+class CreateShift(BaseModel):
+    worker_id: int
+
 # dependency function : same shape as of the lifespan function but at a smaller scale
 async def get_conn(request: Request):
     async with request.app.state.conn_pool.connection() as conn: # as this is a connection not a pool
@@ -60,3 +64,11 @@ async def read_data(conn= Depends(get_conn)): # depends points out at where the 
         await cur.execute("SELECT * FROM shifts") # accessing shifts table using .execute
         rows = await cur.fetchall() # fetching all the shifts data
         return rows # returning rows 
+
+
+# POST /shifts route
+@app.post("/shifts")
+async def create_data(create_shift: CreateShift, new_con= Depends(get_conn)):
+    async with new_con.cursor() as cur:
+        await cur.execute("SELECT worker_id FROM workers WHERE worker_id=%s", (create_shift.CreateShift))
+        
