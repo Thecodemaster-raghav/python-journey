@@ -70,5 +70,14 @@ async def read_data(conn= Depends(get_conn)): # depends points out at where the 
 @app.post("/shifts")
 async def create_data(create_shift: CreateShift, new_con= Depends(get_conn)):
     async with new_con.cursor() as cur:
-        await cur.execute("SELECT worker_id FROM workers WHERE worker_id=%s", (create_shift.CreateShift))
-        
+        await cur.execute("SELECT worker_id FROM workers WHERE worker_id=%s", (create_shift.worker_id,))
+        fetch_rows = await cur.fetchone()
+        if fetch_rows is None:
+            raise HTTPException(status_code=404, detail="no matching workers found")
+        await cur.execute("SELECT worker_id FROM shifts WHERE worker_id=%s AND clock_out IS NULL", (create_shift.worker_id,))
+        fetch_shift_rows = await cur.fetchone()
+        if fetch_shift_rows is not None:
+            raise HTTPException(status_code=409, detail="shift already exists")
+        await cur.execute("INSERT INTO shifts (worker_id, clock_in) VALUES (%s, now()) RETURNING *", (create_shift.worker_id,))
+        shift_data = await cur.fetchone()
+        return shift_data
