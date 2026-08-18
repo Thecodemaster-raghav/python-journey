@@ -94,3 +94,20 @@ async def create_workers(create_workers: CreateWorkers, conn_workers=Depends(get
         await cur.execute("INSERT INTO workers (name) VALUES (%s) RETURNING *", (create_workers.name,))
         workers_rows = await cur.fetchone()
         return workers_rows 
+
+# PUT route for shift clock_out with gaurds 
+# 404 shift doesn't exist · 409 already clocked out · 403 not your shift · 200 updated
+# to merger both the gaurds i needed to select clock_out and filter on shift_id; clock_out starts as null
+@app.put("/shifts/{shift_id}/clock_out")
+async def update_ClockOut(shift_id: int, conn_ClockOut=Depends(get_conn)):
+    async with conn_ClockOut.cursor() as cur:
+        await cur.execute("SELECT clock_out FROM shifts WHERE shift_id=%s", (shift_id,))
+        clockOut_rows = await cur.fetchone()
+        if clockOut_rows is None:
+            raise HTTPException(status_code=404, detail="no shift exist")
+        if clockOut_rows is not None:
+            raise HTTPException(status_code=409, detail="clocked out exist already")
+        await cur.execute("UPDATE shifts SET clock_out = now() WHERE shift_id=%s RETURNING *", (shift_id,)) # no insert 
+        # as we are updating the table not inserting values
+        clockOut_update = await cur.fetchone()
+        return clockOut_update
