@@ -48,6 +48,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+class CreateWorkers(BaseModel):
+    name: str
+
 class CreateShift(BaseModel):
     worker_id: int
 
@@ -66,18 +69,28 @@ async def read_data(conn= Depends(get_conn)): # depends points out at where the 
         return rows # returning rows 
 
 
-# POST /shifts route
+# POST /shifts route with 2 gaurds where Guard 1 fails when it finds nothing (worker missing). 
+# Guard 2 fails when it finds something (open shift exists).
 @app.post("/shifts")
 async def create_data(create_shift: CreateShift, new_con= Depends(get_conn)):
     async with new_con.cursor() as cur:
         await cur.execute("SELECT worker_id FROM workers WHERE worker_id=%s", (create_shift.worker_id,))
-        fetch_rows = await cur.fetchone()
-        if fetch_rows is None:
+        fetch_worker_row = await cur.fetchone()
+        if fetch_worker_row is None:
             raise HTTPException(status_code=404, detail="no matching workers found")
         await cur.execute("SELECT worker_id FROM shifts WHERE worker_id=%s AND clock_out IS NULL", (create_shift.worker_id,))
-        fetch_shift_rows = await cur.fetchone()
-        if fetch_shift_rows is not None:
-            raise HTTPException(status_code=409, detail="shift already exists")
+        fetch_shift_row = await cur.fetchone()
+        if fetch_shift_row is not None:
+            raise HTTPException(status_code=409, detail="dual shift entry")
         await cur.execute("INSERT INTO shifts (worker_id, clock_in) VALUES (%s, now()) RETURNING *", (create_shift.worker_id,))
         shift_data = await cur.fetchone()
         return shift_data
+
+
+# POST workers route with no gaurds as there is no check for anything just the worker gets created
+@app.post("/workers")
+async def create_workers(create_workers: CreateWorkers, conn_workers=Depends(get_conn)):
+    async with conn_workers.cursor() as cur:
+        await cur.execute("INSERT INTO workers (name) VALUES (%s) RETURNING *", (create_workers.name,))
+        workers_rows = await cur.fetchone()
+        return workers_rows 
