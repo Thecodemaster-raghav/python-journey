@@ -111,18 +111,21 @@ async def update_ClockOut(shift_id: int, conn_ClockOut=Depends(get_conn)):
         clockOut_update = await cur.fetchone()
         return clockOut_update
 
-
 # the aggregation route
 # COALESCE is a SQL function that takes a list of values and returns the first one that isn't NULL
 # WHAT extract epoch from does is that it extracts the number out of the interval and EPOCH from is what asking to give the
 # total as seconds; /3600 is plain division 3600 is an hour so this converts seconds to hour
 @app.get("/workers/{worker_id}/hours")
-async def compute_hours(worker_id: int, hours_conn=Depends(get_conn)):
-    async with hours_conn.cursor() as cur:
-        await cur.execute("SELECT worker_id FROM workers WHERE worker_id=%s", (worker_id,))
+async def agg_hours(worker_id: int, hours_conn=Depends(get_conn)): # borrowing the connection
+    async with hours_conn.cursor() as cur: # .cursor() creates a cursor on the connection
+        await cur.execute("SELECT worker_id FROM workers WHERE worker_id=%s", (worker_id,)) # check againts no matching worker_id
         hour_rows = await cur.fetchone()
         if hour_rows is None:
-            raise HTTPException(status_code=404, detail="no matching worker id")
-        await cur.execute("SELECT ROUND(EXTRACT(EPOCH FROM COALESCE(SUM(clock_out - clock_in), INTERVAL '0')) /3600, 2) AS total_hours FROM shiftS WHERE worker_id=%s AND clock_out IS NOT NULL", (worker_id,))
+            raise HTTPException(status_code=404, detail="no matching workers found")
+        await cur.execute("SELECT ROUND(EXTRACT(EPOCH FROM COALESCE(SUM(clock_out - clock_in), INTERVAL '0')) /3600, 2) AS total_hours FROM shifts WHERE worker_id=%s AND clock_out IS NOT NULL", (worker_id,))
         hours = await cur.fetchone()
-        return hours
+        return hours 
+
+# async with guarantees the connection is returned to the pool when the block ends — even if the route raises. 
+# Borrow on entry, release on exit. 
+# Without it we would have to write the release yourself and leak connections when a route errored.
