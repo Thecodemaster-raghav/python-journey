@@ -25,6 +25,10 @@
 # PUT /shifts/{shift_id}/update-entry — admin correction
 # 403 if role isn't admin
 # GET aggregation route — hours across shifts, computed on demand
+# async with guarantees the connection is returned to the pool when the block ends — even if the route raises. 
+# Borrow on entry, release on exit. 
+# Without it we would have to write the release yourself and leak connections when a route errored.
+
 
 from fastapi import FastAPI, Request, Depends, HTTPException
 from contextlib import asynccontextmanager
@@ -40,7 +44,7 @@ database_conn = os.environ["DATABASE_URL"] # Connection string to postgres
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # opening up the connection to postgres
-    #kwargs the argument is the dict of settings passed through, row_factory is the setting itself
+    # kwargs the argument is the dict of settings passed through, row_factory is the setting itself
     app.state.conn_pool = AsyncConnectionPool(database_conn, kwargs={"row_factory": dict_row}) 
     yield
     # shutdown the connection
@@ -66,7 +70,6 @@ async def read_data(conn= Depends(get_conn)): # depends points out at where the 
         await cur.execute("SELECT * FROM shifts") # accessing shifts table using .execute
         rows = await cur.fetchall() # fetching all the shifts data
         return rows # returning rows 
-
 
 # POST /shifts route with 2 gaurds where Guard 1 fails when it finds nothing (worker missing). 
 # Guard 2 fails when it finds something (open shift exists).
@@ -126,6 +129,27 @@ async def agg_hours(worker_id: int, hours_conn=Depends(get_conn)): # borrowing t
         hours = await cur.fetchone()
         return hours 
 
-# async with guarantees the connection is returned to the pool when the block ends — even if the route raises. 
-# Borrow on entry, release on exit. 
-# Without it we would have to write the release yourself and leak connections when a route errored.
+# aggregation route to see hours weekly and monthly
+@app.get("/workers/{worker_id}/breakdown")
+async def breakdown(worker_id: int, period: str = "weekly", breakdown_conn=Depends(get_conn)):
+    async with breakdown_conn.cursor() as cur:
+        await cur.execute("SELECT worker_id FROM workers WHERE worker_id=%s", (worker_id,))
+        breakdown_rows = await cur.fetchone()
+        if breakdown_rows is None:
+            raise HTTPException(status_code=404, detail="no matching workers found")
+# deploying a hanrdcoded dict instead of passing period in the query itself instead storing in a variable
+        periods = {"weekly": "week", "monthly": "month"}
+        if period not in periods:
+            raise HTTPException(status_code=400, detail="wrong values filled")
+        trunc = periods[period]
+        # f string to call the period as a keyword in SQL
+        await cur.execute(f"""
+            SELECT date_trunc('{trunc}', clock_in) AS period_start,
+                ROUND(EXTRACT(EPOCH FROM COALESCE (SUM(clock_out - clock_in), INTERVAL '0')) /3600, 2) AS total_hours
+            FROM shifts
+            WHERE worker_id=%s AND clock_out IS NOT NULL
+            GROUP BY date_trunc('{trunc}', clock_in)
+            ORDER BY date_trunc('{trunc}', clock_in) 
+""", (worker_id,))
+        computed_period = await cur.fetchall()
+        return computed_period
