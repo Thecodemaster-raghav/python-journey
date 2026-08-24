@@ -143,8 +143,9 @@ async def breakdown(worker_id: int, period: str = "weekly", breakdown_conn=Depen
             raise HTTPException(status_code=400, detail="wrong values filled")
         trunc = periods[period]
         # f string to call the period as a keyword in SQL
+        # wrapped the date_trunc in to_char to format the timestamp into a readable string
         await cur.execute(f"""
-            SELECT date_trunc('{trunc}', clock_in) AS period_start,
+            SELECT to_char(date_trunc('{trunc}', clock_in),  'YYYY mon DD') AS period_start,
                 ROUND(EXTRACT(EPOCH FROM COALESCE (SUM(clock_out - clock_in), INTERVAL '0')) /3600, 2) AS total_hours
             FROM shifts
             WHERE worker_id=%s AND clock_out IS NOT NULL
