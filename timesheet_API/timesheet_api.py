@@ -31,6 +31,7 @@
 
 
 from fastapi import FastAPI, Request, Depends, HTTPException
+from datetime import date
 from contextlib import asynccontextmanager
 import os
 from psycopg_pool import AsyncConnectionPool
@@ -125,32 +126,43 @@ async def agg_hours(worker_id: int, hours_conn=Depends(get_conn)): # borrowing t
         hour_rows = await cur.fetchone()
         if hour_rows is None:
             raise HTTPException(status_code=404, detail="no matching workers found")
-        await cur.execute("SELECT ROUND(EXTRACT(EPOCH FROM COALESCE(SUM(clock_out - clock_in), INTERVAL '0')) /3600, 2) AS total_hours FROM shifts WHERE worker_id=%s AND clock_out IS NOT NULL", (worker_id,))
+        await cur.execute("""
+        SELECT ROUND(EXTRACT(EPOCH FROM COALESCE(SUM(clock_out - clock_in), INTERVAL '0')) /3600, 2) AS total_hours,
+        FROM shifts 
+        WHERE worker_id=%s AND clock_out IS NOT NULL
+        """, (worker_id,))
         hours = await cur.fetchone()
         return hours 
 
 # aggregation route to see hours weekly and monthly
+# returning filtered date hours
 @app.get("/workers/{worker_id}/breakdown")
-async def breakdown(worker_id: int, period: str = "weekly", breakdown_conn=Depends(get_conn)):
-    async with breakdown_conn.cursor() as cur:
-        await cur.execute("SELECT worker_id FROM workers WHERE worker_id=%s", (worker_id,))
-        breakdown_rows = await cur.fetchone()
-        if breakdown_rows is None:
+async def breakdown_hours(start: date, end: date, worker_id: int, period: str ="weekly", hours_conn=Depends(get_conn)):
+    async with hours_conn.cursor() as cur:
+        await cur.execute("""
+              SELECT worker_id 
+              FROM workers 
+              WHERE worker_id=%s                          
+              """, (worker_id,))
+        computed_row = await cur.fetchone()
+        if computed_row is None:
             raise HTTPException(status_code=404, detail="no matching workers found")
 # deploying a hanrdcoded dict instead of passing period in the query itself instead storing in a variable
         periods = {"weekly": "week", "monthly": "month"}
         if period not in periods:
-            raise HTTPException(status_code=400, detail="wrong values filled")
+            raise HTTPException(status_code=400, detail="wrong input value")
         trunc = periods[period]
+        if start >= end:
+            raise HTTPException(status_code=400, detail="wrong input date")
         # f string to call the period as a keyword in SQL
         # wrapped the date_trunc in to_char to format the timestamp into a readable string
         await cur.execute(f"""
-            SELECT to_char(date_trunc('{trunc}', clock_in),  'YYYY mon DD') AS period_start,
-                ROUND(EXTRACT(EPOCH FROM COALESCE (SUM(clock_out - clock_in), INTERVAL '0')) /3600, 2) AS total_hours
-            FROM shifts
-            WHERE worker_id=%s AND clock_out IS NOT NULL
-            GROUP BY date_trunc('{trunc}', clock_in)
-            ORDER BY date_trunc('{trunc}', clock_in) 
-""", (worker_id,))
-        computed_period = await cur.fetchall()
-        return computed_period
+        SELECT to_char(date_trunc('{trunc}', clock_in), 'YYYY Mon DD') AS period_start,
+            ROUND(EXTRACT (EPOCH FROM COALESCE(SUM(clock_out - clock_in), INTERVAL '0')) /3600, 2) AS total_hours
+        FROM shifts
+        WHERE worker_id=%s AND clock_out IS NOT NULL AND clock_in >= %s AND clock_in < %s
+        GROUP BY date_trunc('{trunc}', clock_in)
+        ORDER BY date_trunc('{trunc}', clock_in)
+        """, (worker_id, start, end,))
+        period_rows = await cur.fetchall()
+        return period_rows
