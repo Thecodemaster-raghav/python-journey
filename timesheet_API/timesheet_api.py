@@ -108,7 +108,7 @@ async def update_ClockOut(shift_id: int, conn_ClockOut=Depends(get_conn)):
         clockOut_rows = await cur.fetchone()
         if clockOut_rows is None:
             raise HTTPException(status_code=404, detail="no shift exist")
-        if clockOut_rows is not None:
+        if clockOut_rows["clock_out"] is not None: # as the clockOut_rows is a dict row
             raise HTTPException(status_code=409, detail="clocked out exist already")
         await cur.execute("UPDATE shifts SET clock_out = now() WHERE shift_id=%s RETURNING *", (shift_id,)) # no insert 
         # as we are updating the table not inserting values
@@ -127,7 +127,7 @@ async def agg_hours(worker_id: int, hours_conn=Depends(get_conn)): # borrowing t
         if hour_rows is None:
             raise HTTPException(status_code=404, detail="no matching workers found")
         await cur.execute("""
-        SELECT ROUND(EXTRACT(EPOCH FROM COALESCE(SUM(clock_out - clock_in), INTERVAL '0')) /3600, 2) AS total_hours,
+        SELECT ROUND(EXTRACT(EPOCH FROM COALESCE(SUM(clock_out - clock_in), INTERVAL '0')) /3600, 2) AS total_hours
         FROM shifts 
         WHERE worker_id=%s AND clock_out IS NOT NULL
         """, (worker_id,))
@@ -136,8 +136,9 @@ async def agg_hours(worker_id: int, hours_conn=Depends(get_conn)): # borrowing t
 
 # aggregation route to see hours weekly and monthly
 # returning filtered date hours
+# every non default signature goes first
 @app.get("/workers/{worker_id}/breakdown")
-async def breakdown_hours(start: date, end: date, worker_id: int, period: str ="weekly", hours_conn=Depends(get_conn)):
+async def breakdown_hours(worker_id: int, start: date , end: date, period: str ="weekly", hours_conn=Depends(get_conn)):
     async with hours_conn.cursor() as cur:
         await cur.execute("""
               SELECT worker_id 
