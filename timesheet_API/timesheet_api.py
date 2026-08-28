@@ -55,6 +55,8 @@ app = FastAPI(lifespan=lifespan)
 
 class CreateWorkers(BaseModel):
     name: str
+    username: str # authentication route
+    password: str # authentication route
 
 class CreateShift(BaseModel):
     worker_id: int

@@ -2,6 +2,8 @@
 CREATE TABLE workers(
     name text NOT NULL, --name can not be null
     worker_id serial PRIMARY KEY, -- serial syntax for server assigned id's
+    username text UNIQUE, -- AUTHENTICATION REGISTER ROUTE BUILDING BLOCK
+    hash_pass text NOT NULL, -- AUTHENTICATION ROUTE
     role text NOT NULL DEFAULT 'worker', -- as per design the role is decided to be not null and set to default as 'worker'
     CHECK (role IN ('worker', 'admin'))
 );
