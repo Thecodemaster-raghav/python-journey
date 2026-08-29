@@ -38,6 +38,7 @@ from psycopg_pool import AsyncConnectionPool
 from dotenv import load_dotenv
 from psycopg.rows import dict_row
 from pydantic import BaseModel
+import bcrypt
 
 load_dotenv() # loading the connection
 database_conn = os.environ["DATABASE_URL"] # Connection string to postgres
@@ -61,6 +62,15 @@ class CreateWorkers(BaseModel):
 class CreateShift(BaseModel):
     worker_id: int
 
+
+# hash password func using bcrypt
+# gensalt() for random salt generation
+# encode -> changes str to bytes and decode -> changes bytes to str for text readable format for database
+# not an async because nothing is external just computations
+def hash_password(password):
+    hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    return hashed_password
+
 # dependency function : same shape as of the lifespan function but at a smaller scale
 async def get_conn(request: Request):
     async with request.app.state.conn_pool.connection() as conn: # as this is a connection not a pool
@@ -73,6 +83,26 @@ async def read_data(conn= Depends(get_conn)): # depends points out at where the 
         await cur.execute("SELECT * FROM shifts") # accessing shifts table using .execute
         rows = await cur.fetchall() # fetching all the shifts data
         return rows # returning rows 
+
+
+# authentication register route
+# design decision: having all the fields not null same as a production system. 
+# which enables the clients using the register column, mandatory to fill in those fields.
+@app.post("/register")
+async def registerClient(register_data: CreateWorkers, auth=Depends(get_conn)):
+    async with auth.cursor() as cur:
+        await cur.execute("SELECT username FROM workers WHERE username=%s", (register_data.username,))
+        auth_rows = await cur.fetchone()
+        if auth_rows is not None:
+            raise HTTPException(status_code=409, detail="username exists already")
+        hashed = hash_password(register_data.password)
+        await cur.execute("""
+                INSERT INTO workers(name, username, hash_pass) VALUES (%s, %s, %s)
+                RETURNING username, role
+                """, (register_data.name, register_data.username, hashed,))
+        register_rows = await cur.fetchone()
+        return register_rows
+
 
 # POST /shifts route with 2 gaurds where Guard 1 fails when it finds nothing (worker missing). 
 # Guard 2 fails when it finds something (open shift exists).
@@ -90,7 +120,6 @@ async def create_data(create_shift: CreateShift, new_con= Depends(get_conn)):
         await cur.execute("INSERT INTO shifts (worker_id, clock_in) VALUES (%s, now()) RETURNING *", (create_shift.worker_id,))
         shift_data = await cur.fetchone()
         return shift_data
-
 
 # POST workers route with no gaurds as there is no check for anything just the worker gets created
 @app.post("/workers")
