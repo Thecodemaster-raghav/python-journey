@@ -18,3 +18,17 @@ class Solution(object):
 
 result = Solution.getCommon([1,2,3], [2,4])
 print(result)
+
+# the approach with set 
+# using set and the sorted list will give the smallest value
+# put 1 list inside set and traverse the other with a for loop return n if similar and return -1 if not
+
+class Sol(object):
+    def comValue(self, nums1, nums2):
+        nums = set(nums1)
+        for n in nums2:
+            if n in nums:
+                return n
+        return -1
+
+result1 = Sol().comValue([1,2,3,6], [2,3,4,5])
