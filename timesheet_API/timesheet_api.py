@@ -103,6 +103,10 @@ async def registerClient(register_data: CreateWorkers, auth=Depends(get_conn)):
         register_rows = await cur.fetchone()
         return register_rows
 
+# the login route 
+@app.post("/login")
+async def user_login():
+
 
 # POST /shifts route with 2 gaurds where Guard 1 fails when it finds nothing (worker missing). 
 # Guard 2 fails when it finds something (open shift exists).
