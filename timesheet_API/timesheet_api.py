@@ -39,9 +39,13 @@ from dotenv import load_dotenv
 from psycopg.rows import dict_row
 from pydantic import BaseModel
 import bcrypt
+import jwt
 
 load_dotenv() # loading the connection
 database_conn = os.environ["DATABASE_URL"] # Connection string to postgres
+
+# jwt_token reading from the .env file
+jwt_secret = os.environ["JWT_SECRET"]
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -53,6 +57,11 @@ async def lifespan(app: FastAPI):
     await app.state.conn_pool.close()
 
 app = FastAPI(lifespan=lifespan)
+
+
+class ClientLogin(BaseModel):
+    username: str
+    password: str
 
 class CreateWorkers(BaseModel):
     name: str
@@ -70,6 +79,11 @@ class CreateShift(BaseModel):
 def hash_password(password):
     hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     return hashed_password
+
+# verify or password check function
+def verify_pass(password, store_hash):
+    new_pass = bcrypt.checkpw(password.encode(), store_hash.encode())
+    return new_pass
 
 # dependency function : same shape as of the lifespan function but at a smaller scale
 async def get_conn(request: Request):
@@ -103,9 +117,24 @@ async def registerClient(register_data: CreateWorkers, auth=Depends(get_conn)):
         register_rows = await cur.fetchone()
         return register_rows
 
-# the login route 
+# the login route which is POST not because it is creating a resource but because it carries sensitive data 
+# a that of a password
 @app.post("/login")
-async def user_login():
+async def user_login(user_login: ClientLogin, login_conn=Depends(get_conn)):
+    async with login_conn.cursor() as cur:
+        # query by username
+        await cur.execute("SELECT hash_pass, worker_id, role FROM workers WHERE username=%s", (user_login.username,))
+        login_row = await cur.fetchone()
+        if login_row is None:
+            raise HTTPException(status_code=401, detail="wrong username or password")
+        # verify_pass wxcepts 2 args one with password and the other is the stored hash_pass which we are checking against the 
+        # pass at login
+        check_pass = verify_pass(user_login.password, login_row["hash_pass"])
+        if not check_pass:
+            raise HTTPException(status_code=401, detail="wrong username or password")
+         # login creates a token -> encode(), a protected route receives a token and checks it -> decode()
+        create_token = jwt.encode({"worker_id": login_row["worker_id"]}, jwt_secret, algorithm="HS256")
+        return {"access_token": create_token, "token_type": "bearer"}
 
 
 # POST /shifts route with 2 gaurds where Guard 1 fails when it finds nothing (worker missing). 
