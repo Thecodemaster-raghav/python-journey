@@ -68,22 +68,36 @@ class CreateWorkers(BaseModel):
     username: str # authentication route
     password: str # authentication route
 
-class CreateShift(BaseModel):
-    worker_id: int
-
-
 # hash password func using bcrypt
 # gensalt() for random salt generation
 # encode -> changes str to bytes and decode -> changes bytes to str for text readable format for database
 # not an async because nothing is external just computations
-def hash_password(password):
+def hash_password(password) -> bool:
     hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     return hashed_password
 
 # verify or password check function
-def verify_pass(password, store_hash):
+# using the -> bool to verify that the return values i going to be a boolean
+def verify_pass(password, store_hash) -> bool:
     new_pass = bcrypt.checkpw(password.encode(), store_hash.encode())
     return new_pass
+
+
+# dependency function for token check on the routes
+# token dependency needs headers
+# here .get() returns None for the 401 check instead of crashing
+def verify_tokens(request: Request) -> int:
+    read_header = request.headers.get("Authorization")
+    if read_header is None:
+        raise HTTPException(status_code=401, detail="Invalid or missing token")
+    auth_split = read_header.split()
+    token = auth_split[1]
+    try:
+        decoded = jwt.decode(token, jwt_secret, algorithms=["HS256"])
+        return decoded["worker_id"]
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid or missing token")
+
 
 # dependency function : same shape as of the lifespan function but at a smaller scale
 async def get_conn(request: Request):
@@ -97,7 +111,6 @@ async def read_data(conn= Depends(get_conn)): # depends points out at where the 
         await cur.execute("SELECT * FROM shifts") # accessing shifts table using .execute
         rows = await cur.fetchall() # fetching all the shifts data
         return rows # returning rows 
-
 
 # authentication register route
 # design decision: having all the fields not null same as a production system. 
@@ -139,18 +152,20 @@ async def user_login(user_login: ClientLogin, login_conn=Depends(get_conn)):
 
 # POST /shifts route with 2 gaurds where Guard 1 fails when it finds nothing (worker missing). 
 # Guard 2 fails when it finds something (open shift exists).
+# we get worker_id from the tokens itself now so need for the model for shift with worker id so that
+# no other worker can edit other workers shift timings
 @app.post("/shifts")
-async def create_data(create_shift: CreateShift, new_con= Depends(get_conn)):
+async def create_data(new_con= Depends(get_conn), current_worker=Depends(verify_tokens)):
     async with new_con.cursor() as cur:
-        await cur.execute("SELECT worker_id FROM workers WHERE worker_id=%s", (create_shift.worker_id,))
+        await cur.execute("SELECT worker_id FROM workers WHERE worker_id=%s", (current_worker,))
         fetch_worker_row = await cur.fetchone()
         if fetch_worker_row is None:
             raise HTTPException(status_code=404, detail="no matching workers found")
-        await cur.execute("SELECT worker_id FROM shifts WHERE worker_id=%s AND clock_out IS NULL", (create_shift.worker_id,))
+        await cur.execute("SELECT worker_id FROM shifts WHERE worker_id=%s AND clock_out IS NULL", (current_worker,))
         fetch_shift_row = await cur.fetchone()
         if fetch_shift_row is not None:
             raise HTTPException(status_code=409, detail="dual shift entry")
-        await cur.execute("INSERT INTO shifts (worker_id, clock_in) VALUES (%s, now()) RETURNING *", (create_shift.worker_id,))
+        await cur.execute("INSERT INTO shifts (worker_id, clock_in) VALUES (%s, now()) RETURNING *", (current_worker,))
         shift_data = await cur.fetchone()
         return shift_data
 
@@ -184,7 +199,8 @@ async def update_ClockOut(shift_id: int, conn_ClockOut=Depends(get_conn)):
 # WHAT extract epoch from does is that it extracts the number out of the interval and EPOCH from is what asking to give the
 # total as seconds; /3600 is plain division 3600 is an hour so this converts seconds to hour
 @app.get("/workers/{worker_id}/hours")
-async def agg_hours(worker_id: int, hours_conn=Depends(get_conn)): # borrowing the connection
+# borrowing the connection
+async def agg_hours(worker_id: int, hours_conn=Depends(get_conn), worker_tokens=Depends(verify_tokens)):
     async with hours_conn.cursor() as cur: # .cursor() creates a cursor on the connection
         await cur.execute("SELECT worker_id FROM workers WHERE worker_id=%s", (worker_id,)) # check againts no matching worker_id
         hour_rows = await cur.fetchone()
