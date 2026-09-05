@@ -193,6 +193,7 @@ async def update_ClockOut(shift_id: int, conn_ClockOut=Depends(get_conn)):
 # COALESCE is a SQL function that takes a list of values and returns the first one that isn't NULL
 # WHAT extract epoch from does is that it extracts the number out of the interval and EPOCH from is what asking to give the
 # total as seconds; /3600 is plain division 3600 is an hour so this converts seconds to hour
+# add the 403 route for ownership check
 @app.get("/workers/{worker_id}/hours")
 # borrowing the connection
 async def agg_hours(worker_id: int, hours_conn=Depends(get_conn), worker_tokens=Depends(verify_tokens)):
@@ -201,6 +202,8 @@ async def agg_hours(worker_id: int, hours_conn=Depends(get_conn), worker_tokens=
         hour_rows = await cur.fetchone()
         if hour_rows is None:
             raise HTTPException(status_code=404, detail="no matching workers found")
+        if worker_tokens != worker_id:
+            raise HTTPException(status_code=403, detail="Access Forbidden")
         await cur.execute("""
         SELECT ROUND(EXTRACT(EPOCH FROM COALESCE(SUM(clock_out - clock_in), INTERVAL '0')) /3600, 2) AS total_hours
         FROM shifts 
