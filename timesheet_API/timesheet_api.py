@@ -176,12 +176,15 @@ async def create_workers(create_workers: CreateWorkers, conn_workers=Depends(get
 # 404 shift doesn't exist · 409 already clocked out · 403 not your shift · 200 updated
 # to merger both the gaurds i needed to select clock_out and filter on shift_id; clock_out starts as null
 @app.put("/shifts/{shift_id}/clock_out")
-async def update_ClockOut(shift_id: int, conn_ClockOut=Depends(get_conn)):
+async def update_ClockOut(shift_id: int, conn_ClockOut=Depends(get_conn), worker_tokens=Depends(verify_tokens)):
     async with conn_ClockOut.cursor() as cur:
-        await cur.execute("SELECT clock_out FROM shifts WHERE shift_id=%s", (shift_id,))
+        await cur.execute("SELECT clock_out, worker_id FROM shifts WHERE shift_id=%s", (shift_id,))
         clockOut_rows = await cur.fetchone()
         if clockOut_rows is None:
             raise HTTPException(status_code=404, detail="no shift exist")
+        # the ownership check
+        if clockOut_rows["worker_id"] != worker_tokens:
+            raise HTTPException(status_code=403, detail="Access Forbidden")
         if clockOut_rows["clock_out"] is not None: # as the clockOut_rows is a dict row
             raise HTTPException(status_code=409, detail="clocked out exist already")
         await cur.execute("UPDATE shifts SET clock_out = now() WHERE shift_id=%s RETURNING *", (shift_id,)) # no insert 
@@ -197,13 +200,14 @@ async def update_ClockOut(shift_id: int, conn_ClockOut=Depends(get_conn)):
 @app.get("/workers/{worker_id}/hours")
 # borrowing the connection
 async def agg_hours(worker_id: int, hours_conn=Depends(get_conn), worker_tokens=Depends(verify_tokens)):
+    # ownership check for the route
+    if worker_tokens != worker_id:
+        raise HTTPException(status_code=403, detail="Access Forbidden")
     async with hours_conn.cursor() as cur: # .cursor() creates a cursor on the connection
         await cur.execute("SELECT worker_id FROM workers WHERE worker_id=%s", (worker_id,)) # check againts no matching worker_id
         hour_rows = await cur.fetchone()
         if hour_rows is None:
             raise HTTPException(status_code=404, detail="no matching workers found")
-        if worker_tokens != worker_id:
-            raise HTTPException(status_code=403, detail="Access Forbidden")
         await cur.execute("""
         SELECT ROUND(EXTRACT(EPOCH FROM COALESCE(SUM(clock_out - clock_in), INTERVAL '0')) /3600, 2) AS total_hours
         FROM shifts 
@@ -216,7 +220,11 @@ async def agg_hours(worker_id: int, hours_conn=Depends(get_conn), worker_tokens=
 # returning filtered date hours
 # every non default signature goes first
 @app.get("/workers/{worker_id}/breakdown")
-async def breakdown_hours(worker_id: int, start: date , end: date, period: str ="weekly", hours_conn=Depends(get_conn)):
+async def breakdown_hours(worker_id: int, start: date , end: date, period: str ="weekly", 
+                          hours_conn=Depends(get_conn), worker_tokens=Depends(verify_tokens)):
+    # ownership check to confirm
+    if worker_tokens != worker_id:
+        raise HTTPException(status_code=403, detail="Access Forbidden")
     async with hours_conn.cursor() as cur:
         await cur.execute("""
               SELECT worker_id 
