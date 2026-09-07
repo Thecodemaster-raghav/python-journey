@@ -102,7 +102,7 @@ async def get_conn(request: Request):
 
 # the GET route
 @app.get("/shifts")
-async def read_data(conn= Depends(get_conn)): # depends points out at where the data gets readed from
+async def shifts(conn= Depends(get_conn)): # depends points out at where the data gets readed from
     async with conn.cursor() as cur: # cursor is what helps us talk with the database 
         await cur.execute("SELECT * FROM shifts") # accessing shifts table using .execute
         rows = await cur.fetchall() # fetching all the shifts data
@@ -112,7 +112,7 @@ async def read_data(conn= Depends(get_conn)): # depends points out at where the 
 # design decision: having all the fields not null same as a production system. 
 # which enables the clients using the register column, mandatory to fill in those fields.
 @app.post("/register")
-async def registerClient(register_data: CreateWorkers, auth=Depends(get_conn)):
+async def client(register_data: CreateWorkers, auth=Depends(get_conn)):
     async with auth.cursor() as cur:
         await cur.execute("SELECT username FROM workers WHERE username=%s", (register_data.username,))
         auth_rows = await cur.fetchone()
@@ -129,7 +129,7 @@ async def registerClient(register_data: CreateWorkers, auth=Depends(get_conn)):
 # the login route which is POST not because it is creating a resource but because it carries sensitive data 
 # as that of a password
 @app.post("/login")
-async def user_login(user_login: ClientLogin, login_conn=Depends(get_conn)):
+async def login(user_login: ClientLogin, login_conn=Depends(get_conn)):
     async with login_conn.cursor() as cur:
         # query by username
         await cur.execute("SELECT hash_pass, worker_id, role FROM workers WHERE username=%s", (user_login.username,))
@@ -150,7 +150,7 @@ async def user_login(user_login: ClientLogin, login_conn=Depends(get_conn)):
 # we get worker_id from the tokens itself now so need for the model for shift with worker id so that
 # no other worker can edit other workers shift timings
 @app.post("/shifts")
-async def create_data(new_con= Depends(get_conn), current_worker=Depends(verify_tokens)):
+async def WorkerShift(new_con= Depends(get_conn), current_worker=Depends(verify_tokens)):
     async with new_con.cursor() as cur:
         await cur.execute("SELECT worker_id FROM workers WHERE worker_id=%s", (current_worker,))
         fetch_worker_row = await cur.fetchone()
@@ -166,7 +166,7 @@ async def create_data(new_con= Depends(get_conn), current_worker=Depends(verify_
 
 # POST workers route with no gaurds as there is no check for anything just the worker gets created
 @app.post("/workers")
-async def create_workers(create_workers: CreateWorkers, conn_workers=Depends(get_conn)):
+async def workers(create_workers: CreateWorkers, conn_workers=Depends(get_conn)):
     async with conn_workers.cursor() as cur:
         await cur.execute("INSERT INTO workers (name) VALUES (%s) RETURNING *", (create_workers.name,))
         workers_rows = await cur.fetchone()
@@ -176,7 +176,7 @@ async def create_workers(create_workers: CreateWorkers, conn_workers=Depends(get
 # 404 shift doesn't exist · 409 already clocked out · 403 not your shift · 200 updated
 # to merger both the gaurds i needed to select clock_out and filter on shift_id; clock_out starts as null
 @app.put("/shifts/{shift_id}/clock_out")
-async def update_ClockOut(shift_id: int, conn_ClockOut=Depends(get_conn), worker_tokens=Depends(verify_tokens)):
+async def clockOut(shift_id: int, conn_ClockOut=Depends(get_conn), worker_tokens=Depends(verify_tokens)):
     async with conn_ClockOut.cursor() as cur:
         await cur.execute("SELECT clock_out, worker_id FROM shifts WHERE shift_id=%s", (shift_id,))
         clockOut_rows = await cur.fetchone()
@@ -199,7 +199,7 @@ async def update_ClockOut(shift_id: int, conn_ClockOut=Depends(get_conn), worker
 # add the 403 route for ownership check
 @app.get("/workers/{worker_id}/hours")
 # borrowing the connection
-async def agg_hours(worker_id: int, hours_conn=Depends(get_conn), worker_tokens=Depends(verify_tokens)):
+async def hours(worker_id: int, hours_conn=Depends(get_conn), worker_tokens=Depends(verify_tokens)):
     # ownership check for the route
     if worker_tokens != worker_id:
         raise HTTPException(status_code=403, detail="Access Forbidden")
@@ -220,7 +220,7 @@ async def agg_hours(worker_id: int, hours_conn=Depends(get_conn), worker_tokens=
 # returning filtered date hours
 # every non default signature goes first
 @app.get("/workers/{worker_id}/breakdown")
-async def breakdown_hours(worker_id: int, start: date , end: date, period: str ="weekly", 
+async def breakdown(worker_id: int, start: date , end: date, period: str ="weekly", 
                           hours_conn=Depends(get_conn), worker_tokens=Depends(verify_tokens)):
     # ownership check to confirm
     if worker_tokens != worker_id:
