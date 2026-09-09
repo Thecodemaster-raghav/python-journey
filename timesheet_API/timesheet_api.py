@@ -31,7 +31,7 @@
 
 
 from fastapi import FastAPI, Request, Depends, HTTPException
-from datetime import date
+from datetime import date, datetime
 from contextlib import asynccontextmanager
 import os
 from psycopg_pool import AsyncConnectionPool
@@ -70,6 +70,10 @@ class CreateWorkers(BaseModel):
     name: str
     username: str # authentication route
     password: str # authentication route
+
+class UpdateEntry(BaseModel): # cannot put bare values as params so a model for the admin route
+    clock_in: datetime | None=None
+    clock_out: datetime | None=None
 
 # hash password func using bcrypt
 # gensalt() for random salt generation
@@ -144,6 +148,18 @@ async def login(user_login: ClientLogin, login_conn=Depends(get_conn)):
          # login creates a token -> encode(), a protected route receives a token and checks it -> decode()
         create_token = jwt.encode({"worker_id": login_row["worker_id"]}, jwt_secret, algorithm="HS256")
         return {"access_token": create_token, "token_type": "bearer"}
+
+# admin route for updating or changing the clock-in clock-out times for workers
+# query the callers role; 403 if not admin
+@app.patch("/admin/{shift_id}")
+async def entry(shift_id: int, update_entry=Depends(get_conn), tokens=Depends(verify_tokens)):
+    async with update_entry.cursor() as cur:
+        await cur.execute("SELECT role FROM workers WHERE worker_id=%s", (tokens,))
+        rows = await cur.fetchone()
+        if rows is None:
+            raise HTTPException(status_code=404, detail="Invalid entry")
+        if rows["role"] != "admin":
+            raise HTTPException(status_code=403, detail="Access Forbidden") 
 
 # POST /shifts route with 2 gaurds where Guard 1 fails when it finds nothing (worker missing). 
 # Guard 2 fails when it finds something (open shift exists).
