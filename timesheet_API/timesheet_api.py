@@ -31,16 +31,16 @@
 
 
 from fastapi import FastAPI, Request, Depends, HTTPException
-from datetime import date, datetime
+from datetime import date
 from contextlib import asynccontextmanager
 import os
 from psycopg_pool import AsyncConnectionPool
 from dotenv import load_dotenv
 from psycopg.rows import dict_row
-from pydantic import BaseModel
 import bcrypt
 import jwt
 from fastapi.security import HTTPBearer
+from models import ClientLogin, CreateWorkers, UpdateEntry
 
 load_dotenv() # loading the connection
 database_conn = os.environ["DATABASE_URL"] # Connection string to postgres
@@ -61,19 +61,6 @@ app = FastAPI(lifespan=lifespan)
 # creating an instance for the token dependency function
 # header extraction using this function
 security = HTTPBearer()
-
-class ClientLogin(BaseModel):
-    username: str
-    password: str
-
-class CreateWorkers(BaseModel):
-    name: str
-    username: str # authentication route
-    password: str # authentication route
-
-class UpdateEntry(BaseModel): # cannot put bare values as params so a model for the admin route
-    clock_in: datetime | None=None
-    clock_out: datetime | None=None
 
 # hash password func using bcrypt
 # gensalt() for random salt generation
