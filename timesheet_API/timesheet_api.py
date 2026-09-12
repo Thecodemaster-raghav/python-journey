@@ -114,13 +114,13 @@ async def shifts(conn= Depends(get_conn)): # depends points out at where the dat
 
 # admin GET route
 @app.get("/admin")
-async def check(conn_admin=Depends(get_conn), tokens=Depends(verify_tokens)):
+async def list_shifts(conn_admin=Depends(get_conn), tokens=Depends(verify_tokens)):
     async with conn_admin.cursor() as cur:
         await cur.execute("SELECT role FROM workers WHERE worker_id=%s", (tokens,))
-        admin_rows = await cur.fetchone()
-        if admin_rows is None:
+        caller = await cur.fetchone()
+        if caller is None:
             raise HTTPException(status_code=404, detail="Invalid Entry")
-        if admin_rows["role"] != "admin":
+        if caller["role"] != "admin":
             raise HTTPException(status_code=403, detail="Access Forbidden")
         await cur.execute("SELECT * FROM shifts")
         rows = await cur.fetchall()
