@@ -28,25 +28,16 @@
 # async with guarantees the connection is returned to the pool when the block ends — even if the route raises. 
 # Borrow on entry, release on exit. 
 # Without it we would have to write the release yourself and leak connections when a route errored.
-
-
 from fastapi import FastAPI, Request, Depends, HTTPException
 from datetime import date
 from contextlib import asynccontextmanager
-import os
 from psycopg_pool import AsyncConnectionPool
-from dotenv import load_dotenv
 from psycopg.rows import dict_row
+from config import database_conn, jwt_secret
 import bcrypt
 import jwt
 from fastapi.security import HTTPBearer
 from models import ClientLogin, CreateWorkers, UpdateEntry
-
-load_dotenv() # loading the connection
-database_conn = os.environ["DATABASE_URL"] # Connection string to postgres
-
-# jwt_token reading from the .env file
-jwt_secret = os.environ["JWT_SECRET"]
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
