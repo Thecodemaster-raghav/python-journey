@@ -28,59 +28,27 @@
 # async with guarantees the connection is returned to the pool when the block ends — even if the route raises. 
 # Borrow on entry, release on exit. 
 # Without it we would have to write the release yourself and leak connections when a route errored.
-from fastapi import FastAPI, Request, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException
 from datetime import date
 from contextlib import asynccontextmanager
 from psycopg_pool import AsyncConnectionPool
 from psycopg.rows import dict_row
 from config import database_conn, jwt_secret
-import bcrypt
+from dependencies import get_conn, verify_tokens, hash_password, verify_pass
 import jwt
-from fastapi.security import HTTPBearer
 from models import ClientLogin, CreateWorkers, UpdateEntry
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # opening up the connection to postgres
     # kwargs the argument is the dict of settings passed through, row_factory is the setting itself
-    app.state.conn_pool = AsyncConnectionPool(database_conn, kwargs={"row_factory": dict_row}) 
+    app.state.conn_pool = AsyncConnectionPool(database_conn,open=False,kwargs={"row_factory": dict_row})
+    await app.state.conn_pool.open()
     yield
     # shutdown the connection
     await app.state.conn_pool.close()
 
 app = FastAPI(lifespan=lifespan)
-# creating an instance for the token dependency function
-# header extraction using this function
-security = HTTPBearer()
-
-# hash password func using bcrypt
-# gensalt() for random salt generation
-# encode -> changes str to bytes and decode -> changes bytes to str for text readable format for database
-# not an async because nothing is external just computations
-def hash_password(password) -> bool:
-    hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-    return hashed_password
-
-# verify or password check function
-# using the -> bool to verify that the return values i going to be a boolean
-def verify_pass(password, store_hash) -> bool:
-    new_pass = bcrypt.checkpw(password.encode(), store_hash.encode())
-    return new_pass
-
-# dependency function for token check on the routes
-# token dependency needs headers
-# credentials is the actual token now and HTTPBearer is the instance we created to extract the header
-def verify_tokens(token=Depends(security)) -> int:
-    try: # try block to gracefully come of the program rather than shutting down the app
-        decoded = jwt.decode(token.credentials, jwt_secret, algorithms=["HS256"])
-        return decoded["worker_id"]
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token request")
-
-# dependency function : same shape as of the lifespan function but at a smaller scale
-async def get_conn(request: Request):
-    async with request.app.state.conn_pool.connection() as conn: # as this is a connection not a pool
-        yield conn
 
 # the GET route
 @app.get("/shifts")
@@ -92,7 +60,7 @@ async def shifts(conn= Depends(get_conn)): # depends points out at where the dat
 
 # admin GET route
 @app.get("/admin")
-async def list_shifts(conn_admin=Depends(get_conn), tokens=Depends(verify_tokens)):
+async def register_worker(conn_admin=Depends(get_conn), tokens=Depends(verify_tokens)):
     async with conn_admin.cursor() as cur:
         await cur.execute("SELECT role FROM workers WHERE worker_id=%s", (tokens,))
         caller = await cur.fetchone()
