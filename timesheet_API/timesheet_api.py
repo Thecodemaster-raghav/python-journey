@@ -37,6 +37,8 @@ from config import database_conn, jwt_secret
 from dependencies import get_conn, verify_tokens, hash_password, verify_pass
 import jwt
 from models import ClientLogin, CreateWorkers, UpdateEntry
+from workers import router as worker_routes
+from shifts import router as shift_routes
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -49,18 +51,12 @@ async def lifespan(app: FastAPI):
     await app.state.conn_pool.close()
 
 app = FastAPI(lifespan=lifespan)
-
-# the GET route
-@app.get("/shifts")
-async def shifts(conn= Depends(get_conn)): # depends points out at where the data gets readed from
-    async with conn.cursor() as cur: # cursor is what helps us talk with the database 
-        await cur.execute("SELECT * FROM shifts") # accessing shifts table using .execute
-        rows = await cur.fetchall() # fetching all the shifts data
-        return rows # returning rows 
+app.include_router(worker_routes)
+app.include_router(shift_routes)
 
 # admin GET route
 @app.get("/admin")
-async def register_worker(conn_admin=Depends(get_conn), tokens=Depends(verify_tokens)):
+async def admin_shifts(conn_admin=Depends(get_conn), tokens=Depends(verify_tokens)):
     async with conn_admin.cursor() as cur:
         await cur.execute("SELECT role FROM workers WHERE worker_id=%s", (tokens,))
         caller = await cur.fetchone()
@@ -76,7 +72,7 @@ async def register_worker(conn_admin=Depends(get_conn), tokens=Depends(verify_to
 # design decision: having all the fields not null same as a production system. 
 # which enables the clients using the register column, mandatory to fill in those fields.
 @app.post("/register")
-async def client(register_data: CreateWorkers, auth=Depends(get_conn)):
+async def register_worker(register_data: CreateWorkers, auth=Depends(get_conn)):
     async with auth.cursor() as cur:
         await cur.execute("SELECT username FROM workers WHERE username=%s", (register_data.username,))
         auth_rows = await cur.fetchone()
@@ -112,7 +108,7 @@ async def login(user_login: ClientLogin, login_conn=Depends(get_conn)):
 # admin route for updating or changing the clock-in clock-out times for workers
 # query the callers role; 403 if not admin
 @app.patch("/admin/{shift_id}")
-async def role(entry: UpdateEntry, shift_id: int, conn=Depends(get_conn), tokens=Depends(verify_tokens)):
+async def update_entry(entry: UpdateEntry, shift_id: int, conn=Depends(get_conn), tokens=Depends(verify_tokens)):
     async with conn.cursor() as cur:
         await cur.execute("SELECT role FROM workers WHERE worker_id=%s", (tokens,))
         rows = await cur.fetchone()
@@ -137,112 +133,3 @@ async def role(entry: UpdateEntry, shift_id: int, conn=Depends(get_conn), tokens
         await cur.execute(f"UPDATE shifts SET {joined_pieces} WHERE shift_id=%s RETURNING *", values + [shift_id],)
         admin_rows = await cur.fetchone()
         return admin_rows 
-
-# POST /shifts route with 2 gaurds where Guard 1 fails when it finds nothing (worker missing). 
-# Guard 2 fails when it finds something (open shift exists).
-# we get worker_id from the tokens itself now so need for the model for shift with worker id so that
-# no other worker can edit other workers shift timings
-@app.post("/shifts")
-async def WorkerShift(new_con= Depends(get_conn), current_worker=Depends(verify_tokens)):
-    async with new_con.cursor() as cur:
-        await cur.execute("SELECT worker_id FROM workers WHERE worker_id=%s", (current_worker,))
-        fetch_worker_row = await cur.fetchone()
-        if fetch_worker_row is None:
-            raise HTTPException(status_code=404, detail="no matching workers found")
-        await cur.execute("SELECT worker_id FROM shifts WHERE worker_id=%s AND clock_out IS NULL", (current_worker,))
-        fetch_shift_row = await cur.fetchone()
-        if fetch_shift_row is not None:
-            raise HTTPException(status_code=409, detail="dual shift entry")
-        await cur.execute("INSERT INTO shifts (worker_id, clock_in) VALUES (%s, now()) RETURNING *", (current_worker,))
-        shift_data = await cur.fetchone()
-        return shift_data
-
-# POST workers route with no gaurds as there is no check for anything just the worker gets created
-@app.post("/workers")
-async def workers(create_workers: CreateWorkers, conn_workers=Depends(get_conn)):
-    async with conn_workers.cursor() as cur:
-        await cur.execute("INSERT INTO workers (name) VALUES (%s) RETURNING *", (create_workers.name,))
-        workers_rows = await cur.fetchone()
-        return workers_rows 
-
-# PUT route for shift clock_out with gaurds 
-# 404 shift doesn't exist · 409 already clocked out · 403 not your shift · 200 updated
-# to merger both the gaurds i needed to select clock_out and filter on shift_id; clock_out starts as null
-@app.put("/shifts/{shift_id}/clock_out")
-async def clockOut(shift_id: int, conn_ClockOut=Depends(get_conn), worker_tokens=Depends(verify_tokens)):
-    async with conn_ClockOut.cursor() as cur:
-        await cur.execute("SELECT clock_out, worker_id FROM shifts WHERE shift_id=%s", (shift_id,))
-        clockOut_rows = await cur.fetchone()
-        if clockOut_rows is None:
-            raise HTTPException(status_code=404, detail="no shift exist")
-        # the ownership check
-        if clockOut_rows["worker_id"] != worker_tokens:
-            raise HTTPException(status_code=403, detail="Access Forbidden")
-        if clockOut_rows["clock_out"] is not None: # as the clockOut_rows is a dict row
-            raise HTTPException(status_code=409, detail="clocked out exist already")
-        await cur.execute("UPDATE shifts SET clock_out = now() WHERE shift_id=%s RETURNING *", (shift_id,)) # no insert 
-        # as we are updating the table not inserting values
-        clockOut_update = await cur.fetchone()
-        return clockOut_update
-
-# the aggregation route
-# COALESCE is a SQL function that takes a list of values and returns the first one that isn't NULL
-# WHAT extract epoch from does is that it extracts the number out of the interval and EPOCH from is what asking to give the
-# total as seconds; /3600 is plain division 3600 is an hour so this converts seconds to hour
-# add the 403 route for ownership check
-@app.get("/workers/{worker_id}/hours")
-# borrowing the connection
-async def hours(worker_id: int, hours_conn=Depends(get_conn), worker_tokens=Depends(verify_tokens)):
-    # ownership check for the route
-    if worker_tokens != worker_id:
-        raise HTTPException(status_code=403, detail="Access Forbidden")
-    async with hours_conn.cursor() as cur: # .cursor() creates a cursor on the connection
-        await cur.execute("SELECT worker_id FROM workers WHERE worker_id=%s", (worker_id,)) # check againts no matching worker_id
-        hour_rows = await cur.fetchone()
-        if hour_rows is None:
-            raise HTTPException(status_code=404, detail="no matching workers found")
-        await cur.execute("""
-        SELECT ROUND(EXTRACT(EPOCH FROM COALESCE(SUM(clock_out - clock_in), INTERVAL '0')) /3600, 2) AS total_hours
-        FROM shifts 
-        WHERE worker_id=%s AND clock_out IS NOT NULL
-        """, (worker_id,))
-        hours = await cur.fetchone()
-        return hours 
-
-# aggregation route to see hours weekly and monthly
-# returning filtered date hours
-# every non default signature goes first
-@app.get("/workers/{worker_id}/breakdown")
-async def breakdown(worker_id: int, start: date , end: date, period: str ="weekly", 
-                          hours_conn=Depends(get_conn), worker_tokens=Depends(verify_tokens)):
-    # ownership check to confirm
-    if worker_tokens != worker_id:
-        raise HTTPException(status_code=403, detail="Access Forbidden")
-    async with hours_conn.cursor() as cur:
-        await cur.execute("""
-              SELECT worker_id 
-              FROM workers 
-              WHERE worker_id=%s                          
-              """, (worker_id,))
-        computed_row = await cur.fetchone()
-        if computed_row is None:
-            raise HTTPException(status_code=404, detail="no matching workers found")
-# deploying a hanrdcoded dict instead of passing period in the query itself instead storing in a variable
-        periods = {"weekly": "week", "monthly": "month"}
-        if period not in periods:
-            raise HTTPException(status_code=400, detail="wrong input value")
-        trunc = periods[period]
-        if start >= end:
-            raise HTTPException(status_code=400, detail="wrong input date")
-        # f string to call the period as a keyword in SQL
-        # wrapped the date_trunc in to_char to format the timestamp into a readable string
-        await cur.execute(f"""
-        SELECT to_char(date_trunc('{trunc}', clock_in), 'YYYY Mon DD') AS period_start,
-            ROUND(EXTRACT (EPOCH FROM COALESCE(SUM(clock_out - clock_in), INTERVAL '0')) /3600, 2) AS total_hours
-        FROM shifts
-        WHERE worker_id=%s AND clock_out IS NOT NULL AND clock_in >= %s AND clock_in < %s
-        GROUP BY date_trunc('{trunc}', clock_in)
-        ORDER BY date_trunc('{trunc}', clock_in)
-        """, (worker_id, start, end,))
-        period_rows = await cur.fetchall()
-        return period_rows
