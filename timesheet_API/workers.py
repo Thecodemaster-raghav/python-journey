@@ -20,7 +20,7 @@ async def hours(worker_id: int, hours_conn=Depends(get_conn), worker_tokens=Depe
         await cur.execute("SELECT worker_id FROM workers WHERE worker_id=%s", (worker_id,)) # check againts no matching worker_id
         hour_rows = await cur.fetchone()
         if hour_rows is None:
-            raise HTTPException(status_code=404, detail="no matching workers found")
+            raise HTTPException(status_code=404, detail="Invalid Entry")
         await cur.execute("""
         SELECT ROUND(EXTRACT(EPOCH FROM COALESCE(SUM(clock_out - clock_in), INTERVAL '0')) /3600, 2) AS total_hours
         FROM shifts 
@@ -46,14 +46,14 @@ async def breakdown(worker_id: int, start: date , end: date, period: str ="weekl
               """, (worker_id,))
         computed_row = await cur.fetchone()
         if computed_row is None:
-            raise HTTPException(status_code=404, detail="no matching workers found")
+            raise HTTPException(status_code=404, detail="Invalid Entry")
 # deploying a hanrdcoded dict instead of passing period in the query itself instead storing in a variable
         periods = {"weekly": "week", "monthly": "month"}
         if period not in periods:
             raise HTTPException(status_code=400, detail="wrong input value")
         trunc = periods[period]
         if start >= end:
-            raise HTTPException(status_code=400, detail="wrong input date")
+            raise HTTPException(status_code=400, detail="wrong input value")
         # f string to call the period as a keyword in SQL
         # wrapped the date_trunc in to_char to format the timestamp into a readable string
         await cur.execute(f"""
