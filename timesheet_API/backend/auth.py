@@ -1,7 +1,7 @@
 # all login and register routes
 from fastapi import APIRouter, HTTPException, Depends
 from models import CreateWorkers, ClientLogin
-from dependencies import get_conn, hash_password, verify_pass
+from dependencies import get_conn, hash_password, verify_pass, verify_tokens
 import jwt
 from config import jwt_secret
 router = APIRouter()
@@ -42,3 +42,12 @@ async def login(user_login: ClientLogin, login_conn=Depends(get_conn)):
          # login creates a token -> encode(), a protected route receives a token and checks it -> decode()
         create_token = jwt.encode({"worker_id": login_row["worker_id"]}, jwt_secret, algorithm="HS256")
         return {"access_token": create_token, "token_type": "bearer"}
+
+# the delete route using transcation: hard delete
+@router.delete("/account")
+async def delete_account(conn=Depends(get_conn), token=Depends(verify_tokens)):
+    async with conn.transaction():
+        async with conn.cursor() as cur:
+            await cur.execute("DELETE FROM shifts WHERE worker_id=%s", (token,))
+            await cur.execute("DELETE FROM workers WHERE worker_id=%s", (token,))
+            return {"delete_request": "success"}
