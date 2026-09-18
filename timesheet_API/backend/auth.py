@@ -50,4 +50,4 @@ async def delete_account(conn=Depends(get_conn), token=Depends(verify_tokens)):
         async with conn.cursor() as cur:
             await cur.execute("DELETE FROM shifts WHERE worker_id=%s", (token,))
             await cur.execute("DELETE FROM workers WHERE worker_id=%s", (token,))
-            return {"delete_request": "success"}
+            return {"delete_request": "Successful"}
