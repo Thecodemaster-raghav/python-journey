@@ -1,15 +1,14 @@
 # the base62 algorithm for the URL shortner system design practice 
-alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+class Model(object):
+    def tobase(self, alphabet, nums):
+        new_list = [] # empty list to catch the chars
+        while(nums>0): # do the division up until the remainder is greater than 0
+            index = nums % 62 # catches the index
+            rem = alphabet[index]
+            nums = nums // 62 # quotient 
+            new_list.append(rem) # addin the chars to the empty string
+        result = "".join(new_list[::-1]) # reversing and than joining the list
+        return result
 
-def to_base(number) -> int:
-    new_chars = []
-    while(number > 0): # dividing the numbers and the remainder is less than 0
-        index = number % 62 # deving and getting the index
-        remainder = alphabet[index] # to get the chars
-        new_chars.append(remainder) # addin those chars to the empty list
-        number = number // 62
-    new_nums = "".join(new_chars[::-1]) # having the list of chars and ::-1 returns a reversed list
-    return new_nums
-
-result = to_base(262)
-print(result)
+calc_result = Model().tobase("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 125)
+print(calc_result)
