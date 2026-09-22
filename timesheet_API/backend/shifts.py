@@ -4,14 +4,6 @@ from dependencies import get_conn, verify_tokens
 
 router = APIRouter()
 
-# the GET route
-@router.get("/shifts")
-async def shifts(conn= Depends(get_conn)): # depends points out at where the data gets readed from
-    async with conn.cursor() as cur: # cursor is what helps us talk with the database 
-        await cur.execute("SELECT * FROM shifts") # accessing shifts table using .execute
-        rows = await cur.fetchall() # fetching all the shifts data
-        return rows # returning rows 
-
 # POST /shifts route with 2 gaurds where Guard 1 fails when it finds nothing (worker missing). 
 # Guard 2 fails when it finds something (open shift exists).
 # we get worker_id from the tokens itself now so need for the model for shift with worker id so that
