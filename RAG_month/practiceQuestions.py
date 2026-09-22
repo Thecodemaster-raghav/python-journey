@@ -13,15 +13,16 @@ class CharString(object):
     # and count is < 0 so for count there is no need of a separate flagship
 
 class Solution(object):
-    def countChars(self, words):
-        words_count = words.lower().split() # splitting the words into a list to count and normalizing it
+    def countWords(self, words):
+        words_count = words.lower().split() # .lower() for normalization and .split() for splitting the string into a list 
         total = {}
         for w in words_count:
             if w in total:
-                total[w] += 1 # increment if same word
+                total[w] += 1
             else:
-                total[w] = 1 # start the counter at 1 if new word
-        return total
+                total[w] = 1
+        sorted_words = sorted(total.items(), key=lambda x: x[1], reverse=True)[:2] # to get the top 2 pairs
+        return sorted_words        
 
-result = Solution().countChars("Raghav raghav Shriyam don")
+result = Solution().countWords("raghav Raghav Keshav keshav taran Happy")
 print(result)
