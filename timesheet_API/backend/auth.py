@@ -4,6 +4,7 @@ from models import CreateWorkers, ClientLogin
 from dependencies import get_conn, hash_password, verify_pass, verify_tokens
 import jwt
 from config import jwt_secret
+from datetime import datetime, timezone, timedelta
 router = APIRouter()
 
 # authentication register route
@@ -40,7 +41,8 @@ async def login(user_login: ClientLogin, login_conn=Depends(get_conn)):
         if not check_pass:
             raise HTTPException(status_code=401, detail="wrong username or password")
          # login creates a token -> encode(), a protected route receives a token and checks it -> decode()
-        create_token = jwt.encode({"worker_id": login_row["worker_id"]}, jwt_secret, algorithm="HS256")
+        create_token = jwt.encode({"worker_id": login_row["worker_id"],"exp": datetime.now(tz=timezone.utc) + timedelta(hours=2)},
+                                   jwt_secret, algorithm="HS256")
         return {"access_token": create_token, "token_type": "bearer"}
 
 # the delete route using transcation: hard delete
