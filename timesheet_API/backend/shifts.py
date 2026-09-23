@@ -4,6 +4,16 @@ from dependencies import get_conn, verify_tokens
 
 router = APIRouter()
 
+# for clients to view their open shifts
+# None is valid so no gaurd just returning the row
+# returning the open shifts that is why clock_out IS NULL in the query
+@router.get("/shifts/open-shifts")
+async def openShifts(shift_conn=Depends(get_conn), tokens=Depends(verify_tokens)):
+    async with shift_conn.cursor() as cur:
+        await cur.execute("SELECT shift_id, clock_in FROM shifts WHERE worker_id=%s AND clock_out IS NULL", (tokens,))
+        shifts = await cur.fetchone()
+        return shifts 
+
 # POST /shifts route with 2 gaurds where Guard 1 fails when it finds nothing (worker missing). 
 # Guard 2 fails when it finds something (open shift exists).
 # we get worker_id from the tokens itself now so need for the model for shift with worker id so that
