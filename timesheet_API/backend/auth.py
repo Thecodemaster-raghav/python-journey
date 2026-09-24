@@ -31,7 +31,7 @@ async def register_worker(register_data: CreateWorkers, auth=Depends(get_conn)):
 async def login(user_login: ClientLogin, login_conn=Depends(get_conn)):
     async with login_conn.cursor() as cur:
         # query by username
-        await cur.execute("SELECT hash_pass, worker_id, role FROM workers WHERE username=%s", (user_login.username,))
+        await cur.execute("SELECT hash_pass, worker_id, role, name FROM workers WHERE username=%s", (user_login.username,))
         login_row = await cur.fetchone()
         if login_row is None:
             raise HTTPException(status_code=401, detail="wrong username or password")
@@ -41,7 +41,7 @@ async def login(user_login: ClientLogin, login_conn=Depends(get_conn)):
         if not check_pass:
             raise HTTPException(status_code=401, detail="wrong username or password")
          # login creates a token -> encode(), a protected route receives a token and checks it -> decode()
-        create_token = jwt.encode({"worker_id": login_row["worker_id"],
+        create_token = jwt.encode({"worker_id": login_row["worker_id"], "name": login_row["name"],
                                    "exp": datetime.now(tz=timezone.utc) + timedelta(hours=2),
                                    "role": login_row["role"]},
                                    jwt_secret, algorithm="HS256")
