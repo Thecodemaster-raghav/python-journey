@@ -29,6 +29,7 @@
 # Borrow on entry, release on exit. 
 # Without it we would have to write the release yourself and leak connections when a route errored.
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from psycopg_pool import AsyncConnectionPool
 from psycopg.rows import dict_row
@@ -49,6 +50,16 @@ async def lifespan(app: FastAPI):
     await app.state.conn_pool.close()
 
 app = FastAPI(lifespan=lifespan)
+# add coorsmiddleware for the cross origin communication.
+# allow_methods=["*"] -> which means allow all the http methods
+# allow_headers=["*"] -> meaning all headers are allowed
+origins=["http://localhost:5173"]
+app.add_middleware(CORSMiddleware,
+                   allow_origins=origins,
+                   allow_credentials=True,
+                   allow_methods=["*"], 
+                   allow_headers=["*"],
+)
 app.include_router(worker_routes)
 app.include_router(shift_routes)
 app.include_router(admin_routes)
