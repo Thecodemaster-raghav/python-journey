@@ -1,18 +1,30 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { useNow } from '../hooks/useRequest.js';
-import { openShiftStore } from '../lib/openShift.js';
 import {
   formatDateTime, formatDuration, formatHours, formatTime,
   hoursBetween, parseIso, toIsoWithOffset,
 } from '../lib/datetime.js';
 
 export default function ShiftCard({ workerId, onShiftClosed }) {
-  const [openShift, setOpenShift] = useState(() => openShiftStore.load(workerId));
+  const [openShift, setOpenShift] = useState(null);
   const [lastShift, setLastShift] = useState(null);
   const [busy, setBusy] = useState(null); // 'in' | 'out' | null
   const [error, setError] = useState('');
   const now = useNow(Boolean(openShift));
+
+  useEffect(() => {
+  let cancelled = false;
+  api.openShifts()
+    .then((data) => {
+      if (cancelled || !data) return;
+      setOpenShift({ id: data.shift_id, clockIn: data.clock_in });
+    })
+    .catch((e) => {
+      if (!cancelled) setError(e.message);
+    });
+  return () => { cancelled = true; };
+}, []);
 
   async function handleClockIn() {
     setBusy('in');
@@ -24,7 +36,6 @@ export default function ShiftCard({ workerId, onShiftClosed }) {
         throw new Error("Clocked in, but the server didn't return a shift id, so this page can't clock you out.");
       }
       const shift = { id, clockIn: data?.clock_in ?? toIsoWithOffset(new Date()) };
-      openShiftStore.save(workerId, shift);
       setOpenShift(shift);
       setLastShift(null);
     } catch (e) {
@@ -43,7 +54,6 @@ export default function ShiftCard({ workerId, onShiftClosed }) {
         clockIn: data?.clock_in ?? openShift.clockIn,
         clockOut: data?.clock_out ?? toIsoWithOffset(new Date()),
       });
-      openShiftStore.clear(workerId);
       setOpenShift(null);
       onShiftClosed?.();
     } catch (e) {
@@ -55,7 +65,6 @@ export default function ShiftCard({ workerId, onShiftClosed }) {
 
   // Escape hatch if the shift was closed elsewhere (e.g. an admin correction).
   function forgetShift() {
-    openShiftStore.clear(workerId);
     setOpenShift(null);
     setError('');
   }

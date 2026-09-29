@@ -132,6 +132,9 @@ export const api = {
   allShifts: () =>
     request('/admin'),
 
+  openShifts: () =>
+    request('/shifts/open-shifts'),
+
   // changes: { clock_in?: ISO string, clock_out?: ISO string }
   correctShift: (shiftId, changes) =>
     request(`/admin/${enc(shiftId)}`, { method: 'PATCH', body: changes }),

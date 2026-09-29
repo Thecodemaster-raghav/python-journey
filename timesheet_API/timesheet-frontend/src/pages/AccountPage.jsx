@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { api } from '../api.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
-import { openShiftStore } from '../lib/openShift.js';
 
 export default function AccountPage() {
   const { user, endSession } = useAuth();
@@ -15,7 +14,6 @@ export default function AccountPage() {
     setError('');
     try {
       await api.deleteAccount();
-      openShiftStore.clear(user.workerId);
       endSession('deleted');
     } catch (e) {
       setError(e.message);
