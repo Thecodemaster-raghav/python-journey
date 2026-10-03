@@ -6,7 +6,7 @@ class VotingBooth:
         self.votebank = set() # empty set as a container 
 
     def vote(self, votername, options):
-        votername = votername.lower()
+        votername = votername.lower() # same guard at the door — routes, voting booth." used in Fastapi routes
         options = options.lower()
         if votername not in self.votebank:
             self.votebank.add(votername)
