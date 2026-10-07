@@ -53,7 +53,7 @@ app = FastAPI(lifespan=lifespan)
 # add coorsmiddleware for the cross origin communication.
 # allow_methods=["*"] -> which means allow all the http methods
 # allow_headers=["*"] -> meaning all headers are allowed
-origins=["http://localhost:5173"]
+origins=["https://timesheet-six-nu.vercel.app", "http://localhost:5173"]
 app.add_middleware(CORSMiddleware,
                    allow_origins=origins,
                    allow_credentials=True,
