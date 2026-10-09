@@ -43,7 +43,9 @@ from auth import router as auth_routes
 async def lifespan(app: FastAPI):
     # opening up the connection to postgres
     # kwargs the argument is the dict of settings passed through, row_factory is the setting itself
-    app.state.conn_pool = AsyncConnectionPool(database_conn,open=False,kwargs={"row_factory": dict_row})
+    # adding the check_connection to check for the stale connections
+    app.state.conn_pool = AsyncConnectionPool(database_conn,open=False,check=AsyncConnectionPool.check_connection,
+                                              kwargs={"row_factory": dict_row})
     await app.state.conn_pool.open()
     yield
     # shutdown the connection
