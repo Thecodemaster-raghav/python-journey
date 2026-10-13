@@ -1,0 +1,1 @@
+ALTER TABLE workers ADD column hourly_rate NUMERIC(10, 2) CHECK (hourly_rate>0);
