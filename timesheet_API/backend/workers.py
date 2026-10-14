@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from dependencies import get_conn, verify_tokens
 from datetime import date
+from models import RateUpdate
 
 router = APIRouter()
 
@@ -20,7 +21,7 @@ async def hours(worker_id: int, hours_conn=Depends(get_conn), worker_tokens=Depe
         await cur.execute("SELECT worker_id FROM workers WHERE worker_id=%s", (worker_id,)) # check againts no matching worker_id
         hour_rows = await cur.fetchone()
         if hour_rows is None:
-            raise HTTPException(status_code=404, detail="Invalid Entry")
+            raise HTTPException(status_code=404, detail="Worker Not Found")
         await cur.execute("""
         SELECT ROUND(EXTRACT(EPOCH FROM COALESCE(SUM(clock_out - clock_in), INTERVAL '0')) /3600, 2) AS total_hours
         FROM shifts 
@@ -46,7 +47,7 @@ async def breakdown(worker_id: int, start: date , end: date, period: str ="weekl
               """, (worker_id,))
         computed_row = await cur.fetchone()
         if computed_row is None:
-            raise HTTPException(status_code=404, detail="Invalid Entry")
+            raise HTTPException(status_code=404, detail="Worker Not Found")
 # deploying a hanrdcoded dict instead of passing period in the query itself instead storing in a variable
         periods = {"weekly": "week", "monthly": "month"}
         if period not in periods:
@@ -66,3 +67,18 @@ async def breakdown(worker_id: int, start: date , end: date, period: str ="weekl
         """, (worker_id, start, end,))
         period_rows = await cur.fetchall()
         return period_rows
+
+# route for updating the pay for a user_worker
+# why the 403 check is not necessary here: 
+# this endpoint only takes a users worker_id from the token never from the request so the user
+# can only ever update their rates
+@router.patch("/workers/me/rate")
+async def set_user_rate(my_rate: RateUpdate, conn=Depends(get_conn), token=Depends(verify_tokens)):
+    async with conn.cursor() as cur:
+        await cur.execute("UPDATE workers SET hourly_rate=%s WHERE worker_id=%s RETURNING worker_id,name,hourly_rate", 
+                          (my_rate, token,))
+        rate_rows = await cur.fetchone()
+        if rate_rows is None:
+            raise HTTPException(status_code=404, detail="Worker Not Found")
+        return rate_rows
+
