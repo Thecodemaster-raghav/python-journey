@@ -1,38 +1,43 @@
-# Timesheet API
-Shift tracking for a small construction crew. Workers clock in and out; 
+# Timesheet
+Timesheet is a webapp designed for workers whose job sites do not have a time clock so they can calculate their hours; 
 hours are computed from the timestamps.
 
-## Resources
-2 resources consisting workers and shifts, with workers schema having workers-id, role — string, defaults to "worker". The only other value is "admin". Server-assigned; clients cannot set it. workers also consist of a names field.
+🔗 **Live demo:** [timesheet-six-nu.vercel.app](https://timesheet-six-nu.vercel.app)
 
-Shifts table consist of shift_id as primary key, having 2 clock-in clock-out timestmaps for workers
-and foreign key in the shifts table worker_id is a foreign key referencing workers.worker_id
+## Why I built this
+The problem I was trying to solve: my friends who work at construction sites have no access to time clocks, so they calculate their hours on paper, which is prone to calculation errors and sometimes forgotten.
 
-Connecting with postgres to eliminate the race condition which means having a gap within requests. Postgres introduces
-atomic sequences which means no breaks in between operations. In python we used to read and then increment the data
-which left a gap and that gap is what breaks atomic sequences.
+The solution: Timesheet records their hours using timestamps posted at clock in/out. It is kept very minimal on purpose, as workers mainly want to log in, post a shift, and view the hours they have worked.
 
-### Each route
-We have 4 different routes; 
-1. POST /shifts -> this is where the data gets created a worker posts a
-clock-in entry and that entry is created with a assigned id to the worker using the workers_id which is server assigned
-and stays permanent for the worker. 
-has different situations againsts it:
-404 worker doesn't exist · 409 already has an open shift · 201 created data
+## Features and Roadmap
+**Workers**
+- [x] Register for an account and log in with a username and password
+- [x] Clock in and clock out using timestamp buttons
+- [x] View hours worked
+- [x] View a breakdown of hours by calendar dates on the dashboard
+- [x] View worker ID on the account page
+- [x] Delete account at any time
 
-2. PUT /shifts/{shift_id}/clock-out -> where the clock-out timing is updated and not created as it starts null and 
-than gets updated.
-404 shift doesn't exist · 409 already clocked out · 403 not your shift · 200 updated
+**Admins**
+- [x] View all registered workers
+- [x] View workers' hours
+- [x] Change workers' hours
 
-3. PUT /shifts/{shift_id}/update-entry — admin correction; if recorded a missed punch. 
-403 if role isn't admin
+**Coming next**
+- [ ] Pay calculation
+- [ ] Download hours as a PDF
 
-4. GET aggregation route — hours across shifts, computed on demand; where workers can access their data about
-how many hours they have worked
+## Tech stack
+- **Backend:** FastAPI, Pydantic
+- **Auth:** JWT tokens; passwords hashed with bcrypt
+- **Database:** PostgreSQL (B-tree indexes on primary key and username)
+- **Frontend:** React, JavaScript
+- **Deployment:** Docker · Railway (backend) · Vercel (frontend) · Neon (database)
 
-#### Design decisions
-1. Timestamps are server authoratative; if workers are able to edit or update changes than they could mis-report their hours.
-2. Clock-out is a PUT not POST as we just want updating in the shift created; That is the reason it starts null and gets updated 
-we do not want to create a separate POST for clock-out.
-3. Admin correction is same reason as the timestamps we do not want to give access to workers to change their data or edit any changes so if any workers misses any shift they can just ask the admin to update their timestamp 
-4. why role is server-assigned. If a client could set it, anyone registering could make themselves admin — privilege escalation
+## Architecture
+```mermaid
+flowchart LR
+    B[Browser] -->|loads the app| V[Vercel: React frontend]
+    B -->|API requests + JWT| R[Railway: FastAPI in Docker]
+    R -->|SQL| N[(Neon: PostgreSQL)]
+```
