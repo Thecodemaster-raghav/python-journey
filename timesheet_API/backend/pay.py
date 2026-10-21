@@ -14,4 +14,3 @@ def calc_pay(shift_hours, hourly_rate, break_time, is_holiday):
     pay = (regular_hours * hourly_rate + overtime * 
            hourly_rate * Decimal("1.5")).quantize(Decimal("0.01"),rounding=ROUND_HALF_UP)
     return pay
-print(calc_pay(10, Decimal("20.00"), 20, False)) 
