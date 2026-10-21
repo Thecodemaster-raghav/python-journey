@@ -34,6 +34,8 @@ def verify_pass(password, store_hash) -> bool:
 def verify_tokens(token=Depends(security)) -> int:
     try: # try block to gracefully come of the program rather than shutting down the app
         decoded = jwt.decode(token.credentials, jwt_secret, algorithms=["HS256"])
+        if decoded.get("worker_id") is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
         return decoded["worker_id"]
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token request")
+        raise HTTPException(status_code=401, detail="Invalid token")
