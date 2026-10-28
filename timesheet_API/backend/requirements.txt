@@ -6,7 +6,6 @@ click==8.5.0
 fastapi==0.141.1
 h11==0.16.0
 idna==3.20
-pi==0.1.2
 psycopg==3.3.6
 psycopg-binary==3.3.6
 psycopg-pool==3.3.3
