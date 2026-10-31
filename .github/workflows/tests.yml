@@ -8,6 +8,7 @@ jobs:
             working-directory: timesheet_API/backend
     env: 
         JWT_SECRET: "secret-sample-for-test"
+        DATABASE_URL: "secret-database-for-test"
     steps:
         - uses: actions/checkout@v6
         - uses: actions/setup-python@v5
