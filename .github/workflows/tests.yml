@@ -1,0 +1,17 @@
+name: tests
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+        run:
+            working-directory: timesheet_API/backend
+    env: 
+        JWT_SECRET: "secret-sample-for-test"
+    steps:
+        - uses: actions/checkout@v6
+        - uses: actions/setup-python@v5
+          with:
+            python-version: '3.11'
+        - run: pip install -r requirements.txt -r requirements-test.txt
+        - run: pytest
