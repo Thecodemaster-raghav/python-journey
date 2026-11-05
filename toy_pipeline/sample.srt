@@ -1,0 +1,16 @@
+1
+00:00:01,000 --> 00:00:03,160
+hey karan, how was your day?
+
+2
+00:00:03,160 --> 00:00:05,000
+I am doing great raghav, how was your day?
+
+3
+00:00:05,500 --> 00:00:07,900
+Hey you know i was amazing, i heard about your vancouver trip. How was it?
+
+4
+00:00:07,980 --> 00:00:20,957
+You are right i went with my friend happy and the trip was amazing. 
+First time i visited vancouver and what buildings skyline roads all of it i just fell in love with the city!
