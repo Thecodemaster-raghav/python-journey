@@ -1,4 +1,5 @@
 # generating a netflix style piepline which netflix uses for real world editing scenarios
+from decimal import Decimal
 
 # open the sample data
 def read_sample(subtitles):
@@ -22,12 +23,30 @@ def parse(blocks, video_id):
         text = "".join(new_blocks[2:])
         merged = {
             "video_id": video_id,
-            "start": start,
-            "end": end,
+            "start": convert_secs(start),
+            "end": convert_secs(end),
             "text": text
         }
         merged_blocks.append(merged)
     return merged_blocks
 
-result = parse(blocks, "ep2")
-print(result)
+# passing the row and time of silences 
+rows = parse(blocks, "ep1")
+time_in_secs = 0.3
+def find_silences(rows, time_in_secs):
+    threshold = []
+    for i in range(1, len(rows)):
+        if rows[i]["start"] - rows[i - 1]["end"] < time_in_secs:
+            continue
+        else:
+            threshold.append((rows[i-1]["end"], rows[i]["start"]))
+    return threshold
+
+# function for counting all the words inside rows
+
+def count_words(rows):
+    total_words = 0
+    for i in rows:
+        words = i["text"].split()
+        total_words += len(words)
+    return total_words
