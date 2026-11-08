@@ -1,5 +1,5 @@
 # for testing the output
-from pipeline import convert_secs, find_silences, count_words
+from pipeline import convert_secs, find_silences, count_words, longest_line, rows, find_texts
 import pytest
 
 def test_convert_secs():
@@ -15,3 +15,14 @@ def test_find_silences():
 
 def test_count_words():
     assert count_words([{"text":"hey karan, how was your day?"}]) == 6
+
+def test_longest_line():
+    assert longest_line(rows)["start"] == 7.98
+    assert longest_line(rows[::-1])["start"] == 7.98
+
+def test_find_word():
+    result = find_texts(rows, "how")
+    assert len(result) == 3
+    assert result[0]["start"] == 1.0
+    assert result[1]["start"] == 3.16
+    assert result[2]["start"] == 5.5

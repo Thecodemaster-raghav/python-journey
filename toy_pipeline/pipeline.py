@@ -50,3 +50,25 @@ def count_words(rows):
         words = i["text"].split()
         total_words += len(words)
     return total_words
+
+
+# function to return the whole dict which runs the longest
+def longest_line(rows):
+    best = rows[0]
+    for r in range(len(rows)):
+        new = rows[r]["end"] - rows[r]["start"]
+        longest_run = best["end"] - best["start"]
+        if new > longest_run:
+            best = rows[r]
+    return best
+
+# find the matching word in the text
+def find_texts(rows, text):
+    searched_list = []
+    for r in range(len(rows)):
+        if text.lower() in rows[r]["text"].lower():
+            searched_list.append(rows[r])
+    return searched_list
+
+result = find_texts(rows, "how")
+print(result)
