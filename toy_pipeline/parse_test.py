@@ -1,5 +1,5 @@
 # for testing the output
-from pipeline import convert_secs, find_silences, count_words, longest_line, rows, find_texts
+from pipeline import convert_secs, find_silences, count_words, longest_line, rows, find_texts, convert_to_buckets
 import pytest
 
 def test_convert_secs():
@@ -26,3 +26,10 @@ def test_find_word():
     assert result[0]["start"] == 1.0
     assert result[1]["start"] == 3.16
     assert result[2]["start"] == 5.5
+
+def test_convert_to_buckets():
+    result = convert_to_buckets(rows)
+    assert len(result) == 20
+    assert len(result[("ep1", 5)]) == 1
+    assert len(result[("ep1", 3)]) == 2
+    assert len(result[("ep1", 7)]) == 2

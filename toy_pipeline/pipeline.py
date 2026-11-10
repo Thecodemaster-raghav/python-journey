@@ -70,5 +70,19 @@ def find_texts(rows, text):
             searched_list.append(rows[r])
     return searched_list
 
-result = find_texts(rows, "how")
-print(result)
+# converting data into 1 second buckets
+def convert_to_buckets(rows):
+    buckets = {}
+    for r in range(len(rows)):
+        first = int(rows[r]["start"])
+        last = int(rows[r]["end"])
+        if rows[r]["end"] == int(rows[r]["end"]):
+            last = int(rows[r]["end"]) - 1
+        else:
+            last = int(rows[r]["end"])
+        for seconds in range(first, last+1):
+            key = (rows[r]["video_id"], seconds)
+            if key not in buckets:
+                buckets[key] = []
+            buckets[key].append(rows[r]["text"])
+    return buckets
