@@ -75,12 +75,12 @@ def convert_to_buckets(rows):
     buckets = {}
     for r in range(len(rows)):
         first = int(rows[r]["start"])
-        last = int(rows[r]["end"])
+        # handling the edge case for 5.0 and 5
         if rows[r]["end"] == int(rows[r]["end"]):
             last = int(rows[r]["end"]) - 1
         else:
             last = int(rows[r]["end"])
-        for seconds in range(first, last+1):
+        for seconds in range(first, last + 1):
             key = (rows[r]["video_id"], seconds)
             if key not in buckets:
                 buckets[key] = []
