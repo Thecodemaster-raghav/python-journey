@@ -86,3 +86,16 @@ def convert_to_buckets(rows):
                 buckets[key] = []
             buckets[key].append(rows[r]["text"])
     return buckets
+
+# building the index search for finding the words matching with the buckets they fall into
+buckets=convert_to_buckets(rows)
+def find_index(buckets):
+    indexes = {}
+    for keys, texts in buckets.items():
+        for text in texts:
+            for words in text.lower().split():
+                if words not in indexes:
+                    indexes[words] = []
+                if keys not in indexes[words]:
+                    indexes[words].append(keys)
+    return indexes
