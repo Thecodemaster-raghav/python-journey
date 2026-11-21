@@ -99,3 +99,21 @@ def find_index(buckets):
                 if keys not in indexes[words]:
                     indexes[words].append(keys)
     return indexes
+
+# getting the start point of every sentence from rows
+
+def build_index_rows(rows):
+    index = {}
+    for row in rows:
+        text = row["text"]
+        entry = (row["video_id"], row["start"])
+        words = text.lower().split()
+        for word in words:
+            if word not in index :
+                index[word] = []
+            if not index[word] or entry != index[word][-1]:
+                index[word].append(entry)
+    return index
+
+result = build_index_rows(rows)
+print(result["how"])
