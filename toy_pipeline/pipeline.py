@@ -115,5 +115,9 @@ def build_index_rows(rows):
                 index[word].append(entry)
     return index
 
-result = build_index_rows(rows)
-print(result["how"])
+# adding the search layer on top of the rows
+# in dicts .get(key, default) gives out the default instead of crashing 
+index = build_index_rows(rows)
+def search(index, word):
+    # here left [] as default so that nothing crashes and a [] list comes as output 
+    return index.get(word, []) 
