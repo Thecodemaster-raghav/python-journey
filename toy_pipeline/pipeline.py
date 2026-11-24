@@ -128,7 +128,7 @@ def intersect(a,b):
     new_index = []
     row = 0
     key = 0
-    while(row<len(a)and key<len(b)):
+    while(row<len(a) and key<len(b)):
         if a[row] < b[key]:
             row += 1
         elif a[row] == b[key]:
@@ -144,3 +144,32 @@ def search_and(index, word1, word2):
     word2 = search(index, "you")
     both_intersect = intersect(word1, word2)
     return both_intersect
+
+# OR function for returning the either video_id and timestamp where any word is spoken
+def either(c, d):
+    either_list = []
+    start = 0
+    start2 = 0
+    while(start<len(c) and start2<len(d)):
+        if c[start] < d[start2]:
+            start += 1
+            either_list.append(c[start-1])
+        elif c[start] == d[start2]: # the equal case for no duplicates
+            start += 1
+            start2 += 1
+            either_list.append(c[start-1])
+        else:
+            start2 += 1
+            either_list.append(d[start2-1])
+    either_list.extend(c[start:])
+    either_list.extend(d[start2:])
+    return either_list
+
+# now the functionfor searching OR cases for where the words were spoken
+def search_or(index, word, word1):
+    list1 = search(index, word)
+    list2 = search(index, word1)
+    either_word = either(list2, list2)
+    return either_word
+
+print(search_or(index, "pizza", "you"))

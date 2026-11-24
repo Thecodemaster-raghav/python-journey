@@ -1,5 +1,5 @@
 # for testing the output
-from pipeline import search_and, search, build_index_rows, convert_secs, find_silences, count_words, longest_line, rows, find_texts, convert_to_buckets
+from pipeline import search_or, search_and, search, build_index_rows, convert_secs, find_silences, count_words, longest_line, rows, find_texts, convert_to_buckets
 import pytest
 
 def test_convert_secs():
@@ -46,3 +46,8 @@ def test_search_and():
     index = build_index_rows(rows)
     assert search_and(index, "how", "hey") == [('ep1', 7.98)]
     assert search_and(index, "are", "you") == [('ep1', 7.98)]
+
+def test_search_or():
+    index = build_index_rows(rows)
+    assert search_or(index, "how", "are") == [('ep1', 7.98)]
+    assert search_or(index, "pizza", "you") == [('ep1', 5.5), ('ep1', 7.98)]
