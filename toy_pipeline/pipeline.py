@@ -1,5 +1,5 @@
 # generating a netflix style piepline which netflix uses for real world editing scenarios
-from decimal import Decimal
+import string
 
 # open the sample data
 def read_sample(subtitles):
@@ -109,10 +109,11 @@ def build_index_rows(rows):
         entry = (row["video_id"], row["start"])
         words = text.lower().split()
         for word in words:
-            if word not in index :
-                index[word] = []
-            if not index[word] or entry != index[word][-1]:
-                index[word].append(entry)
+            clean_word = word.strip(string.punctuation)
+            if clean_word not in index :
+                index[clean_word] = []
+            if not index[clean_word] or entry != index[clean_word][-1]:
+                index[clean_word].append(entry)
     return index
 
 # adding the search layer on top of the rows
@@ -121,3 +122,25 @@ index = build_index_rows(rows)
 def search(index, word):
     # here left [] as default so that nothing crashes and a [] list comes as output 
     return index.get(word, []) 
+
+# the intersection function
+def intersect(a,b):
+    new_index = []
+    row = 0
+    key = 0
+    while(row<len(a)and key<len(b)):
+        if a[row] < b[key]:
+            row += 1
+        elif a[row] == b[key]:
+            new_index.append(a[row])
+            row += 1
+            key += 1
+        else:
+            key += 1
+    return new_index
+# 2nd search search layer: the intersection
+def search_and(index, word1, word2):
+    word1 = search(index, "are")
+    word2 = search(index, "you")
+    both_intersect = intersect(word1, word2)
+    return both_intersect
