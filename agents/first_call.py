@@ -9,10 +9,13 @@ client = anthropic.Anthropic()
 message = client.messages.create(
     model="claude-haiku-5-5",
     max_tokens=600,
+    # adding the system prompt for consitency and first security layer
+    system= "You are a research assistant,. Always help with exactly 2 items, " \
+    "Format: Title | Authors | Year | one-sentence summary. With links.",
     messages=[
         {
             "role":"user",
-            "content":"give me 2 most followed football(soccer players) in the world on instagram.",
+            "content":"give 2 best ai research papers to read",
         }
     ],
 )
